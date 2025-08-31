@@ -1,11 +1,13 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: "export", // Outputs a Single-Page Application (SPA).
-  distDir: "./dist", // Changes the build output directory to `./dist/`.
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH, // Sets the base path to `/some-base-path`.
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
+
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+    alias: {
       'vaul@1.1.2': 'vaul',
       'sonner@2.0.3': 'sonner',
       'recharts@2.15.2': 'recharts',
@@ -15,6 +17,7 @@ const nextConfig = {
       'next-themes@0.4.6': 'next-themes',
       'lucide-react@0.487.0': 'lucide-react',
       'input-otp@1.4.2': 'input-otp',
+      'figma:asset/32627172128547d0f411f95659737c7135d22b6c.png': path.resolve(__dirname, './src/assets/32627172128547d0f411f95659737c7135d22b6c.png'),
       'embla-carousel-react@8.6.0': 'embla-carousel-react',
       'cmdk@1.1.1': 'cmdk',
       'class-variance-authority@0.7.1': 'class-variance-authority',
@@ -44,9 +47,15 @@ const nextConfig = {
       '@radix-ui/react-aspect-ratio@1.1.2': '@radix-ui/react-aspect-ratio',
       '@radix-ui/react-alert-dialog@1.1.6': '@radix-ui/react-alert-dialog',
       '@radix-ui/react-accordion@1.2.3': '@radix-ui/react-accordion',
-    };
-    return config;
+      '@': path.resolve(__dirname, './src'),
+    },
   },
-};
-
-export default nextConfig;
+  build: {
+    target: 'esnext',
+    outDir: 'build',
+  },
+  server: {
+    port: 3000,
+    open: true,
+  },
+});
