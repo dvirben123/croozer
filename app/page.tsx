@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { ProblemSection } from "@/components/ProblemSection";
 import { SolutionSection } from "@/components/SolutionSection";
@@ -18,7 +19,8 @@ export default function HomePage() {
   const [isTermsDialogOpen, setIsTermsDialogOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background text-foreground dark">
+    <div className="min-h-screen bg-background text-foreground dark" dir="rtl">
+      <Header onOpenContactDialog={() => setIsContactDialogOpen(true)} />
       <HeroSection onOpenContactDialog={() => setIsContactDialogOpen(true)} />
       <ProblemSection />
       <SolutionSection />

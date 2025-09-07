@@ -56,7 +56,7 @@
   /* The default color for text or elements that appear on top of accent colored elements. */
   --accent-foreground: rgba(2, 6, 23, 1);
   /* The color used for background in destructive actions, such as delete buttons or error messages. */
-  --destructive: rgba(220, 38, 38, 1);
+  --destructive: rgba(249, 115, 22, 1);
   /* The default color for text or elements that appear on top of destructive colored elements. */
   --destructive-foreground: rgba(2, 6, 23, 1);
   /* The default border color for elements such as inputs, buttons, and other containers. */
@@ -127,7 +127,7 @@
   --muted-foreground: rgba(148, 163, 184, 1);
   --accent: rgba(51, 65, 85, 1);
   --accent-foreground: rgba(248, 250, 252, 1);
-  --destructive: rgba(220, 38, 38, 1);
+  --destructive: rgba(249, 115, 22, 1);
   --destructive-foreground: rgba(248, 250, 252, 1);
   --border: rgba(51, 65, 85, 1);
   --input: rgba(51, 65, 85, 1);

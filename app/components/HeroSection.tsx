@@ -1,8 +1,8 @@
-import { ArrowDown, MessageCircle } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useParallax } from "@/hooks/useScrollAnimation";
-import { VideoWithFallback } from "@/components/figma/VideoWithFallback";
+import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
 import heroImage from "@/assets/32627172128547d0f411f95659737c7135d22b6c.png";
 
 interface HeroSectionProps {
@@ -13,17 +13,17 @@ export function HeroSection({ onOpenContactDialog }: HeroSectionProps) {
   const scrollY = useParallax();
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden -mt-16 sm:-mt-20">
       {/* Background Image */}
       <motion.div
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-0 -top-16 sm:-top-20"
         style={{
           transform: `translateY(${scrollY * 0.5}px)`,
+          height: "calc(100vh + 4rem)",
         }}
       >
-        <VideoWithFallback
-          videoSrc="/videos/hero_video.mp4"
-          imageSrc={heroImage.src}
+        <ImageWithFallback
+          src={heroImage.src}
           alt="שף במטבח מכין פיצות"
           className="w-full h-full object-cover"
           style={{
@@ -31,32 +31,17 @@ export function HeroSection({ onOpenContactDialog }: HeroSectionProps) {
             top: "50%",
             left: "50%",
             width: "100vw",
-            height: "100vh",
+            height: "calc(100vh + 4rem)",
             transform: "translate(-50%, -50%)",
             minWidth: "100%",
-            minHeight: "100%",
+            minHeight: "calc(100vh + 4rem)",
           }}
         />
         <div className="absolute inset-0 bg-black/60 z-10"></div>
       </motion.div>
 
       {/* Content */}
-      <div className="relative z-20 text-center px-4 sm:px-6 max-w-4xl mx-auto">
-        {/* Message Circle Icon */}
-        <motion.div
-          className="flex justify-center mb-6 sm:mb-8"
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{
-            duration: 0.8,
-            delay: 0.2,
-            type: "spring",
-            stiffness: 200,
-          }}
-        >
-          <MessageCircle className="h-16 w-16 sm:h-20 sm:w-20 text-primary" />
-        </motion.div>
-
+      <div className="relative z-20 text-center px-4 sm:px-6 max-w-4xl mx-auto pt-16 sm:pt-20">
         <motion.h1
           className="text-responsive-h1 mb-4 sm:mb-6 text-foreground text-center"
           initial={{ opacity: 0, y: 50 }}
