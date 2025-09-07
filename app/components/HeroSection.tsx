@@ -2,7 +2,7 @@ import { ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useParallax } from "@/hooks/useScrollAnimation";
-import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
+import { VideoWithFallback } from "@/components/figma/VideoWithFallback";
 import heroImage from "@/assets/32627172128547d0f411f95659737c7135d22b6c.png";
 
 interface HeroSectionProps {
@@ -13,17 +13,17 @@ export function HeroSection({ onOpenContactDialog }: HeroSectionProps) {
   const scrollY = useParallax();
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden -mt-16 sm:-mt-20">
-      {/* Background Image */}
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Video */}
       <motion.div
-        className="absolute inset-0 z-0 -top-16 sm:-top-20"
+        className="absolute inset-0 z-0"
         style={{
           transform: `translateY(${scrollY * 0.5}px)`,
-          height: "calc(100vh + 4rem)",
         }}
       >
-        <ImageWithFallback
-          src={heroImage.src}
+        <VideoWithFallback
+          videoSrc="/videos/hero_video.mp4"
+          imageSrc={heroImage.src}
           alt="שף במטבח מכין פיצות"
           className="w-full h-full object-cover"
           style={{
@@ -31,17 +31,17 @@ export function HeroSection({ onOpenContactDialog }: HeroSectionProps) {
             top: "50%",
             left: "50%",
             width: "100vw",
-            height: "calc(100vh + 4rem)",
+            height: "100vh",
             transform: "translate(-50%, -50%)",
             minWidth: "100%",
-            minHeight: "calc(100vh + 4rem)",
+            minHeight: "100%",
           }}
         />
         <div className="absolute inset-0 bg-black/60 z-10"></div>
       </motion.div>
 
       {/* Content */}
-      <div className="relative z-20 text-center px-4 sm:px-6 max-w-4xl mx-auto pt-16 sm:pt-20">
+      <div className="relative z-20 text-center px-4 sm:px-6 max-w-4xl mx-auto">
         <motion.h1
           className="text-responsive-h1 mb-4 sm:mb-6 text-foreground text-center"
           initial={{ opacity: 0, y: 50 }}

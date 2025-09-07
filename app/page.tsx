@@ -38,6 +38,7 @@ export default function HomePage() {
       <ContactFormDialog
         open={isContactDialogOpen}
         onOpenChange={setIsContactDialogOpen}
+        source="contact_form"
       />
 
       <TermsDialog
