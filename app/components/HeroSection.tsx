@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useParallax } from "@/hooks/useScrollAnimation";
 import { VideoWithFallback } from "@/components/figma/VideoWithFallback";
 import heroImage from "@/assets/32627172128547d0f411f95659737c7135d22b6c.png";
-import { useEffect, useState } from "react";
 
 interface HeroSectionProps {
   onOpenContactDialog: () => void;
@@ -12,11 +11,6 @@ interface HeroSectionProps {
 
 export function HeroSection({ onOpenContactDialog }: HeroSectionProps) {
   const scrollY = useParallax();
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden -mt-16 sm:-mt-20">
@@ -24,9 +18,7 @@ export function HeroSection({ onOpenContactDialog }: HeroSectionProps) {
       <motion.div
         className="absolute inset-0 z-0 -top-16 sm:-top-20"
         style={{
-          transform: isMounted
-            ? `translateY(${scrollY * 0.5}px)`
-            : "translateY(0px)",
+          transform: `translateY(${scrollY * 0.5}px)`,
           height: "calc(100vh + 4rem)",
         }}
       >

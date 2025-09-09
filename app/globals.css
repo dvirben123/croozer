@@ -6351,3 +6351,45 @@ html {
     opacity: 0;
   }
 }
+
+/* Missing destructive background classes */
+.bg-destructive\/10 {
+  background-color: var(--destructive);
+}
+
+@supports (color: color-mix(in lab, red, red)) {
+  .bg-destructive\/10 {
+    background-color: color-mix(in oklab, var(--destructive) 10%, transparent);
+  }
+}
+
+.bg-destructive\/20 {
+  background-color: var(--destructive);
+}
+
+@supports (color: color-mix(in lab, red, red)) {
+  .bg-destructive\/20 {
+    background-color: color-mix(in oklab, var(--destructive) 20%, transparent);
+  }
+}
+
+/* Primary background classes */
+.bg-primary\/10 {
+  background-color: var(--primary);
+}
+
+@supports (color: color-mix(in lab, red, red)) {
+  .bg-primary\/10 {
+    background-color: color-mix(in oklab, var(--primary) 10%, transparent);
+  }
+}
+
+.bg-primary\/20 {
+  background-color: var(--primary);
+}
+
+@supports (color: color-mix(in lab, red, red)) {
+  .bg-primary\/20 {
+    background-color: color-mix(in oklab, var(--primary) 20%, transparent);
+  }
+}

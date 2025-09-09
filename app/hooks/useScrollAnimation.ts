@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 export function useScrollAnimation(threshold = 0.1) {
   const [isVisible, setIsVisible] = useState(false);
@@ -36,9 +36,12 @@ export function useParallax() {
   const [scrollY, setScrollY] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setIsMounted(true);
     const handleScroll = () => setScrollY(window.scrollY);
+
+    // Set initial scroll position
+    setScrollY(window.scrollY);
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
