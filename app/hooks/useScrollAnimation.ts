@@ -2,9 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 
 export function useScrollAnimation(threshold = 0.1) {
   const [isVisible, setIsVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const elementRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    setIsMounted(true);
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -26,18 +29,20 @@ export function useScrollAnimation(threshold = 0.1) {
     };
   }, [threshold]);
 
-  return { isVisible, elementRef };
+  return { isVisible: isMounted ? isVisible : false, elementRef };
 }
 
 export function useParallax() {
   const [scrollY, setScrollY] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const handleScroll = () => setScrollY(window.scrollY);
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  return scrollY;
+  return isMounted ? scrollY : 0;
 }

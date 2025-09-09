@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useParallax } from "@/hooks/useScrollAnimation";
 import { VideoWithFallback } from "@/components/figma/VideoWithFallback";
 import heroImage from "@/assets/32627172128547d0f411f95659737c7135d22b6c.png";
+import { useEffect, useState } from "react";
 
 interface HeroSectionProps {
   onOpenContactDialog: () => void;
@@ -11,14 +12,22 @@ interface HeroSectionProps {
 
 export function HeroSection({ onOpenContactDialog }: HeroSectionProps) {
   const scrollY = useParallax();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden -mt-16 sm:-mt-20">
       {/* Background Video */}
       <motion.div
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-0 -top-16 sm:-top-20"
         style={{
-          transform: `translateY(${scrollY * 0.5}px)`,
+          transform: isMounted
+            ? `translateY(${scrollY * 0.5}px)`
+            : "translateY(0px)",
+          height: "calc(100vh + 4rem)",
         }}
       >
         <VideoWithFallback
@@ -31,17 +40,17 @@ export function HeroSection({ onOpenContactDialog }: HeroSectionProps) {
             top: "50%",
             left: "50%",
             width: "100vw",
-            height: "100vh",
+            height: "calc(100vh + 4rem)",
             transform: "translate(-50%, -50%)",
             minWidth: "100%",
-            minHeight: "100%",
+            minHeight: "calc(100vh + 4rem)",
           }}
         />
         <div className="absolute inset-0 bg-black/60 z-10"></div>
       </motion.div>
 
       {/* Content */}
-      <div className="relative z-20 text-center px-4 sm:px-6 max-w-4xl mx-auto">
+      <div className="relative z-20 text-center px-4 sm:px-6 max-w-4xl mx-auto pt-16 sm:pt-20">
         <motion.h1
           className="text-responsive-h1 mb-4 sm:mb-6 text-foreground text-center"
           initial={{ opacity: 0, y: 50 }}
