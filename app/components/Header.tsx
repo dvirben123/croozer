@@ -24,7 +24,7 @@ export function Header({ onOpenContactDialog }: HeaderProps) {
           >
             <img
               src="/assets/4d243741b97f4cb27d5e541b25efddf4d20bc4a9.png"
-              alt="Croozer Logo"
+              alt="דביר בן ישי Croozer Logo"
               className="h-8 sm:h-10 w-auto"
             />
           </motion.div>

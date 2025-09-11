@@ -49,7 +49,7 @@ export function HeroSection({ onOpenContactDialog }: HeroSectionProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
         >
-          קבלו הזמנות ישירות לוואטסאפ
+          קבלו הזמנות ישירות לוואטסאפ דביר בן ישי
           <motion.span
             className="text-primary block !text-[28px] sm:!text-[50px]"
             initial={{ opacity: 0, y: 30 }}

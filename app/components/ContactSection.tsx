@@ -318,7 +318,7 @@ export function ContactSection({ onOpenTermsDialog }: ContactSectionProps) {
             >
               <img
                 src="/assets/4d243741b97f4cb27d5e541b25efddf4d20bc4a9.png"
-                alt="Croozer Logo"
+                alt="דביר בן ישי Croozer Logo"
                 className="h-8 sm:h-10 w-auto"
               />
             </motion.div>
@@ -352,7 +352,7 @@ export function ContactSection({ onOpenTermsDialog }: ContactSectionProps) {
               animate={isVisible ? { opacity: 1 } : { opacity: 0 }}
               transition={{ duration: 0.5, delay: 1.8 }}
             >
-              © Croozer 2024. כל הזכויות שמורות.
+              © Croozer דביר בן ישי 2024. כל הזכויות שמורות.
             </motion.p>
           </div>
         </motion.div>

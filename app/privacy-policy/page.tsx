@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "מדיניות פרטיות - Croozer AI",
+  title: "מדיניות פרטיות - דביר בן ישי Croozer AI",
   description: "מדיניות הפרטיות של Croozer AI - הגנה על המידע האישי שלכם",
   robots: {
     index: true,
@@ -162,7 +162,7 @@ export default function PrivacyPolicyPage() {
         {/* English Version */}
         <div dir="ltr">
           <h1 className="text-4xl font-bold mb-8 text-center">
-            Privacy Policy - Croozer AI
+            Privacy Policy - דביר בן ישי Croozer AI
           </h1>
 
           <div className="prose prose-lg max-w-none space-y-6">
