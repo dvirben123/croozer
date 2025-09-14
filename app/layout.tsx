@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import FacebookSDK from "./components/FacebookSDK";
 
 export const metadata: Metadata = {
   title: "בוט וואטסאפ לעסקים - חסוך זמן וכסף עם אוטומציה חכמה",
@@ -34,6 +35,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const facebookAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "";
+
   return (
     <html lang="he" dir="rtl" className="dark">
       <head>
@@ -45,6 +48,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
+        {facebookAppId && <FacebookSDK appId={facebookAppId} />}
         {children}
       </body>
     </html>
