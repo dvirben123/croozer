@@ -59,7 +59,8 @@ export const useFacebookSDK = () => {
         if (!window.FB) return;
 
         window.FB.api('/me', { fields: 'name,email,picture' }, (response: FacebookUser) => {
-            if (response && !response.error) {
+            //@ts-ignore
+            if (response && !response?.error) {
                 setUser(response);
             }
         });
