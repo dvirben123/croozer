@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import FacebookSDK from "./components/FacebookSDK";
 
 export const metadata: Metadata = {
   title: "בוט וואטסאפ לעסקים - חסוך זמן וכסף עם אוטומציה חכמה",
@@ -46,9 +45,35 @@ export default function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
+        {facebookAppId && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                window.fbAsyncInit = function() {
+                  FB.init({
+                    appId      : '${facebookAppId}',
+                    cookie     : true,
+                    xfbml      : true,
+                    version    : 'v18.0'
+                  });
+                    
+                  FB.AppEvents.logPageView();   
+                    
+                };
+
+                (function(d, s, id){
+                   var js, fjs = d.getElementsByTagName(s)[0];
+                   if (d.getElementById(id)) {return;}
+                   js = d.createElement(s); js.id = id;
+                   js.src = "https://connect.facebook.net/en_US/sdk.js";
+                   fjs.parentNode.insertBefore(js, fjs);
+                 }(document, 'script', 'facebook-jssdk'));
+              `,
+            }}
+          />
+        )}
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
-        {facebookAppId && <FacebookSDK appId={facebookAppId} />}
         {children}
       </body>
     </html>
