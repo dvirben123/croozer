@@ -7,9 +7,18 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
-import { Building2, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import {
+  Building2,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Facebook,
+} from "lucide-react";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function ProfileTab() {
+  const { user } = useAuthGuard();
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -25,82 +34,92 @@ export default function ProfileTab() {
           {/* Profile Overview */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-right">פרטים אישיים</CardTitle>
+              <CardTitle className="text-right flex items-center gap-2">
+                <Facebook className="h-5 w-5 text-blue-600" />
+                פרטים אישיים מפייסבוק
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-start gap-6">
                 <div className="flex-1 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName" className="text-right block">
-                        שם פרטי
-                      </Label>
-                      <Input
-                        id="firstName"
-                        value="דביר"
-                        readOnly
-                        className="text-right"
-                        dir="rtl"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName" className="text-right block">
-                        שם משפחה
-                      </Label>
-                      <Input
-                        id="lastName"
-                        value="בניחי"
-                        readOnly
-                        className="text-right"
-                        dir="rtl"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName" className="text-right block">
+                      שם מלא
+                    </Label>
+                    <Input
+                      id="fullName"
+                      value={user?.name || "טוען..."}
+                      readOnly
+                      className="text-right"
+                      dir="rtl"
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-right block">
                       כתובת אימייל
                     </Label>
-                  <div className="relative">
-                    <Mail className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      value="dvir@croozer.co.il"
-                      readOnly
-                      className="pr-10 text-left"
-                      dir="ltr"
-                    />
-                  </div>
+                    <div className="relative">
+                      <Mail className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        value={user?.email || "לא זמין"}
+                        readOnly
+                        className="pr-10 text-left"
+                        dir="ltr"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-right block">
-                      מספר טלפון
+                    <Label htmlFor="facebookId" className="text-right block">
+                      מזהה פייסבוק
                     </Label>
-                  <div className="relative">
-                    <Phone className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="phone"
-                      type="tel"
-                      value="+972-50-123-4567"
+                      id="facebookId"
+                      value={user?.id || "טוען..."}
                       readOnly
-                      className="pr-10 text-left"
+                      className="text-left"
                       dir="ltr"
                     />
                   </div>
+
+                  {/* Account Status */}
+                  <div className="space-y-2">
+                    <Label className="text-right block">סטטוס חשבון</Label>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="default"
+                        className="bg-green-100 text-green-800"
+                      >
+                        מחובר דרך פייסבוק
+                      </Badge>
+                      <Badge variant="secondary">מאושר</Badge>
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex flex-col items-center space-y-4">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src="/placeholder-avatar.jpg" alt="Profile" />
-                    <AvatarFallback className="text-xl">דב</AvatarFallback>
+                  <Avatar className="h-24 w-24 ring-2 ring-blue-500/20">
+                    <AvatarImage
+                      src={user?.picture?.data?.url}
+                      alt={user?.name || "Profile"}
+                    />
+                    <AvatarFallback className="text-xl bg-blue-100 text-blue-600">
+                      {user?.name?.charAt(0) || "U"}
+                    </AvatarFallback>
                   </Avatar>
-                  <Badge variant="secondary">מנהל מערכת</Badge>
+                  <Badge
+                    variant="default"
+                    className="bg-blue-100 text-blue-800"
+                  >
+                    <Facebook className="h-3 w-3 ml-1" />
+                    משתמש פייסבוק
+                  </Badge>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    <span>הצטרף ב-01/01/2024</span>
+                    <span>מחובר היום</span>
                   </div>
                 </div>
               </div>

@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 // Mock data for business metrics
 const generateMockData = () => {
@@ -182,6 +183,7 @@ function ActivityItem({
 export default function DashboardOverview() {
   const [timeRange, setTimeRange] = useState("30");
   const mockData = useMemo(() => generateMockData(), [timeRange]);
+  const { user } = useAuthGuard();
 
   const { summary } = mockData;
 
@@ -279,14 +281,49 @@ export default function DashboardOverview() {
             </Button>
           </div>
           <div className="text-right">
-            <h1 className="text-2xl font-bold">דשבורד ניהול עסק</h1>
-            <p className="text-muted-foreground">סקירה כללית של הביצועים שלך</p>
+            <h1 className="text-2xl font-bold">
+              שלום {user?.name ? `${user.name}!` : "!"}
+            </h1>
+            <p className="text-muted-foreground">
+              ברוך הבא לדשבורד הניהול העסקי שלך - סקירה כללית של הביצועים
+            </p>
           </div>
         </div>
       </div>
 
       <div className="flex-1 p-6 overflow-auto">
         <div className="space-y-6">
+          {/* User Welcome Card */}
+          {user && (
+            <Card className="bg-gradient-to-l from-blue-50 to-blue-100 border-blue-200">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={user.picture?.data?.url}
+                    alt={user.name}
+                    className="w-12 h-12 rounded-full ring-2 ring-blue-500/20"
+                  />
+                  <div className="flex-1 text-right">
+                    <h3 className="font-semibold text-blue-900">
+                      ברוך הבא, {user.name}!
+                    </h3>
+                    <p className="text-sm text-blue-700">
+                      {user.email
+                        ? `מחובר כ-${user.email}`
+                        : "מחובר דרך פייסבוק"}
+                    </p>
+                  </div>
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-200 text-blue-800"
+                  >
+                    מחובר
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Key Metrics */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <MetricCard

@@ -4,7 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { LogOut, User } from "lucide-react";
-import type { FacebookLoginStatusResponse, FacebookUser } from "@/types/facebook";
+import type {
+  FacebookLoginStatusResponse,
+  FacebookUser,
+} from "@/types/facebook";
 
 export default function FacebookLoginButton() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
@@ -79,22 +82,37 @@ export default function FacebookLoginButton() {
       return;
     }
 
+    // Check if FB is properly initialized before calling login
+    if (!window.FB.getLoginStatus || !isSDKLoaded) {
+      console.error("Facebook SDK not fully initialized");
+      return;
+    }
+
     setIsLoading(true);
 
-    // Call FB.login as per Facebook documentation
-    window.FB.login(
-      (response) => {
-        statusChangeCallback(response);
+    // First check current status, then login if needed
+    window.FB.getLoginStatus((currentStatus) => {
+      if (currentStatus.status === "connected") {
+        // Already logged in, just update status
+        statusChangeCallback(currentStatus);
         setIsLoading(false);
+      } else {
+        // Need to login
+        window.FB.login(
+          (response) => {
+            statusChangeCallback(response);
+            setIsLoading(false);
 
-        if (response.status !== "connected") {
-          console.log("User cancelled login or did not fully authorize.");
-        }
-      },
-      {
-        scope: "email,public_profile", // Request specific permissions
+            if (response.status !== "connected") {
+              console.log("User cancelled login or did not fully authorize.");
+            }
+          },
+          {
+            scope: "email,public_profile", // Request specific permissions
+          }
+        );
       }
-    );
+    });
   };
 
   // Handle Facebook logout
@@ -174,13 +192,18 @@ export default function FacebookLoginButton() {
 
       <Button
         onClick={handleLogin}
-        disabled={isLoading}
-        className="w-full bg-[#1877F2] hover:bg-[#166FE5] text-white gap-2 h-12 shadow-lg"
+        disabled={isLoading || !isSDKLoaded}
+        className="w-full bg-[#1877F2] hover:bg-[#166FE5] text-white gap-2 h-12 shadow-lg disabled:opacity-50"
       >
         {isLoading ? (
           <>
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             מתחבר...
+          </>
+        ) : !isSDKLoaded ? (
+          <>
+            <div className="animate-pulse w-4 h-4 bg-white/30 rounded"></div>
+            טוען פייסבוק...
           </>
         ) : (
           <>

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { ScrollArea } from "./ui/scroll-area";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 interface Message {
   id: string;
@@ -20,6 +21,7 @@ interface Message {
 }
 
 export default function MessagesTab() {
+  const { user } = useAuthGuard();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [messageContent, setMessageContent] = useState("");
   const [messages, setMessages] = useState<Message[]>([
@@ -142,9 +144,11 @@ export default function MessagesTab() {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="p-6 border-b border-border">
-        <h1 className="text-2xl font-bold text-right">ניהול הודעות וואטסאפ</h1>
+        <h1 className="text-2xl font-bold text-right">
+          ניהול הודעות וואטסאפ {user?.name && `- ${user.name}`}
+        </h1>
         <p className="text-muted-foreground text-right mt-1">
-          שלח והתקבל הודעות ללקוחות שלך
+          שלח והתקבל הודעות ללקוחות שלך דרך הפלטפורמה
         </p>
       </div>
 

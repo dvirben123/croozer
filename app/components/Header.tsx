@@ -2,14 +2,14 @@ import { motion } from "framer-motion";
 import { MessageCircle, Mail } from "lucide-react";
 import FacebookLoginButton from "./FacebookLoginButton";
 import Link from "next/link";
-import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   onOpenContactDialog: () => void;
 }
 
 export function Header({ onOpenContactDialog }: HeaderProps) {
-  const { isAuthenticated, user } = useAuthGuard();
+  const { isAuthenticated, user } = useAuth();
   return (
     <motion.header
       className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50"
