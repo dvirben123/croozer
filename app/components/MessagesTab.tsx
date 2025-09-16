@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Phone, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  Send,
+  Phone,
+  Loader2,
+  CheckCircle2,
+  MessageSquareTemplate,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -9,21 +16,54 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { ScrollArea } from "./ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Alert, AlertDescription } from "./ui/alert";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import whatsappAPI from "@/lib/whatsapp-api";
 
 interface Message {
   id: string;
   phoneNumber: string;
   content: string;
   timestamp: Date;
-  status: "sending" | "sent" | "delivered" | "read";
+  status: "sending" | "sent" | "delivered" | "read" | "failed";
   direction: "outgoing" | "incoming";
+  type: "text" | "template";
+  templateName?: string;
+  whatsappMessageId?: string;
+  error?: string;
+}
+
+interface Template {
+  id: string;
+  name: string;
+  status: string;
+  category: string;
+  language: string;
+  components: Array<{
+    type: string;
+    text?: string;
+    format?: string;
+  }>;
 }
 
 export default function MessagesTab() {
   const { user } = useAuthGuard();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [messageContent, setMessageContent] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<
+    "unknown" | "connected" | "disconnected"
+  >("unknown");
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -33,6 +73,7 @@ export default function MessagesTab() {
       timestamp: new Date(Date.now() - 3600000),
       status: "read",
       direction: "outgoing",
+      type: "text",
     },
     {
       id: "2",
@@ -41,6 +82,7 @@ export default function MessagesTab() {
       timestamp: new Date(Date.now() - 3000000),
       status: "read",
       direction: "incoming",
+      type: "text",
     },
     {
       id: "3",
@@ -49,6 +91,7 @@ export default function MessagesTab() {
       timestamp: new Date(Date.now() - 1800000),
       status: "delivered",
       direction: "outgoing",
+      type: "text",
     },
   ]);
   const [isSending, setIsSending] = useState(false);
@@ -62,6 +105,37 @@ export default function MessagesTab() {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // Test backend connection on component mount
+    testConnection();
+    // Load available templates
+    loadTemplates();
+  }, []);
+
+  const testConnection = async () => {
+    try {
+      await whatsappAPI.testConnection();
+      setConnectionStatus("connected");
+    } catch (error) {
+      console.error("Backend connection failed:", error);
+      setConnectionStatus("disconnected");
+    }
+  };
+
+  const loadTemplates = async () => {
+    setIsLoadingTemplates(true);
+    try {
+      const response = await whatsappAPI.getTemplates();
+      if (response.success && response.data) {
+        setTemplates(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to load templates:", error);
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!phoneNumber.trim() || !messageContent.trim() || isSending) return;
 
@@ -72,32 +146,133 @@ export default function MessagesTab() {
       timestamp: new Date(),
       status: "sending",
       direction: "outgoing",
+      type: "text",
     };
 
     setMessages((prev) => [...prev, newMessage]);
     setMessageContent("");
     setIsSending(true);
 
-    // Simulate sending delay (1-2 seconds)
-    const delay = Math.random() * 1000 + 1000; // 1-2 seconds
+    try {
+      const response = await whatsappAPI.sendTextMessage({
+        phoneNumber: phoneNumber.trim(),
+        message: messageContent.trim(),
+      });
 
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === newMessage.id ? { ...msg, status: "sent" } : msg
-        )
-      );
-      setIsSending(false);
-
-      // Simulate delivery status after another second
-      setTimeout(() => {
+      if (response.success && response.data) {
+        // Update message with WhatsApp message ID and mark as sent
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.id === newMessage.id ? { ...msg, status: "delivered" } : msg
+            msg.id === newMessage.id
+              ? {
+                  ...msg,
+                  status: "sent",
+                  whatsappMessageId: response.data?.messages?.[0]?.id,
+                }
+              : msg
           )
         );
-      }, 1000);
-    }, delay);
+
+        // Simulate delivery status after a delay (WhatsApp doesn't provide real-time delivery status)
+        setTimeout(() => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === newMessage.id ? { ...msg, status: "delivered" } : msg
+            )
+          );
+        }, 2000);
+      } else {
+        throw new Error(response.error || "Failed to send message");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Update message status to failed
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === newMessage.id
+            ? {
+                ...msg,
+                status: "failed",
+                error: error instanceof Error ? error.message : "Unknown error",
+              }
+            : msg
+        )
+      );
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleSendTemplate = async () => {
+    if (!phoneNumber.trim() || !selectedTemplate || isSending) return;
+
+    const template = templates.find((t) => t.name === selectedTemplate);
+    if (!template) return;
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      phoneNumber: phoneNumber.trim(),
+      content: `Template: ${template.name} (${template.category})`,
+      timestamp: new Date(),
+      status: "sending",
+      direction: "outgoing",
+      type: "template",
+      templateName: template.name,
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
+    setSelectedTemplate("");
+    setIsSending(true);
+
+    try {
+      const response = await whatsappAPI.sendTemplateMessage({
+        phoneNumber: phoneNumber.trim(),
+        templateName: template.name,
+        languageCode: template.language,
+      });
+
+      if (response.success && response.data) {
+        // Update message with WhatsApp message ID and mark as sent
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === newMessage.id
+              ? {
+                  ...msg,
+                  status: "sent",
+                  whatsappMessageId: response.data?.messages?.[0]?.id,
+                }
+              : msg
+          )
+        );
+
+        // Simulate delivery status after a delay
+        setTimeout(() => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === newMessage.id ? { ...msg, status: "delivered" } : msg
+            )
+          );
+        }, 2000);
+      } else {
+        throw new Error(response.error || "Failed to send template message");
+      }
+    } catch (error) {
+      console.error("Error sending template:", error);
+      // Update message status to failed
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === newMessage.id
+            ? {
+                ...msg,
+                status: "failed",
+                error: error instanceof Error ? error.message : "Unknown error",
+              }
+            : msg
+        )
+      );
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const getStatusIcon = (status: Message["status"]) => {
@@ -112,6 +287,8 @@ export default function MessagesTab() {
         return <CheckCircle2 className="h-3 w-3 text-green-500" />;
       case "read":
         return <CheckCircle2 className="h-3 w-3 text-green-600" />;
+      case "failed":
+        return <AlertCircle className="h-3 w-3 text-red-500" />;
       default:
         return null;
     }
@@ -127,6 +304,8 @@ export default function MessagesTab() {
         return "הועבר";
       case "read":
         return "נקרא";
+      case "failed":
+        return "נכשל";
       default:
         return "";
     }
@@ -144,12 +323,52 @@ export default function MessagesTab() {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="p-6 border-b border-border">
-        <h1 className="text-2xl font-bold text-right">
-          ניהול הודעות וואטסאפ {user?.name && `- ${user.name}`}
-        </h1>
-        <p className="text-muted-foreground text-right mt-1">
-          שלח והתקבל הודעות ללקוחות שלך דרך הפלטפורמה
-        </p>
+        <div className="flex justify-between items-start">
+          <div className="text-right">
+            <h1 className="text-2xl font-bold">
+              ניהול הודעות וואטסאפ {user?.name && `- ${user.name}`}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              שלח הודעות ללקוחות שלך דרך WhatsApp Business API
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {connectionStatus === "connected" && (
+              <Badge
+                variant="outline"
+                className="bg-green-50 text-green-700 border-green-200"
+              >
+                ✅ מחובר לוואטסאפ
+              </Badge>
+            )}
+            {connectionStatus === "disconnected" && (
+              <Badge
+                variant="outline"
+                className="bg-red-50 text-red-700 border-red-200"
+              >
+                ❌ לא מחובר
+              </Badge>
+            )}
+            {connectionStatus === "unknown" && (
+              <Badge
+                variant="outline"
+                className="bg-yellow-50 text-yellow-700 border-yellow-200"
+              >
+                ⏳ בודק חיבור...
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {connectionStatus === "disconnected" && (
+          <Alert className="mt-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-right">
+              לא ניתן להתחבר ל-WhatsApp Business API. בדוק את הגדרות ה-API או
+              פנה לתמיכה.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
       <div className="flex-1 flex gap-6 p-6">
@@ -158,59 +377,165 @@ export default function MessagesTab() {
           <CardHeader>
             <CardTitle className="text-right">שלח הודעה חדשה</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-right block">
-                מספר טלפון
-              </Label>
-              <div className="relative">
-                <Phone className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+972501234567"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="pr-10 text-left"
-                  dir="ltr"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="message" className="text-right block">
-                תוכן ההודעה
-              </Label>
-              <Textarea
-                id="message"
-                placeholder="הקלד את ההודעה שלך כאן..."
-                value={messageContent}
-                onChange={(e) => setMessageContent(e.target.value)}
-                rows={4}
-                className="text-right"
-                dir="rtl"
-              />
-            </div>
-
-            <Button
-              onClick={handleSendMessage}
-              disabled={
-                !phoneNumber.trim() || !messageContent.trim() || isSending
-              }
-              className="w-full gap-2"
-            >
-              {isSending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  שולח הודעה...
-                </>
-              ) : (
-                <>
+          <CardContent>
+            <Tabs defaultValue="text" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="text" className="gap-2">
                   <Send className="h-4 w-4" />
-                  שלח הודעה
-                </>
-              )}
-            </Button>
+                  הודעת טקסט
+                </TabsTrigger>
+                <TabsTrigger value="template" className="gap-2">
+                  <MessageSquareTemplate className="h-4 w-4" />
+                  תבנית הודעה
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Phone Number Field - Common for both tabs */}
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="phone" className="text-right block">
+                  מספר טלפון
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+972526581731"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="pr-10 text-left"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              {/* Text Message Tab */}
+              <TabsContent value="text" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="message" className="text-right block">
+                    תוכן ההודעה
+                  </Label>
+                  <Textarea
+                    id="message"
+                    placeholder="הקלד את ההודעה שלך כאן..."
+                    value={messageContent}
+                    onChange={(e) => setMessageContent(e.target.value)}
+                    rows={4}
+                    className="text-right"
+                    dir="rtl"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={
+                    !phoneNumber.trim() || !messageContent.trim() || isSending
+                  }
+                  className="w-full gap-2"
+                >
+                  {isSending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      שולח הודעה...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      שלח הודעת טקסט
+                    </>
+                  )}
+                </Button>
+              </TabsContent>
+
+              {/* Template Message Tab */}
+              <TabsContent value="template" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="template" className="text-right block">
+                    בחר תבנית הודעה
+                  </Label>
+                  {isLoadingTemplates ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                      טוען תבניות...
+                    </div>
+                  ) : (
+                    <Select
+                      value={selectedTemplate}
+                      onValueChange={setSelectedTemplate}
+                    >
+                      <SelectTrigger className="text-right">
+                        <SelectValue placeholder="בחר תבנית הודעה..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {templates
+                          .filter((t) => t.status === "APPROVED")
+                          .map((template) => (
+                            <SelectItem key={template.id} value={template.name}>
+                              <div className="flex items-center gap-2 text-right">
+                                <Badge variant="outline" className="text-xs">
+                                  {template.category}
+                                </Badge>
+                                <span>{template.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        {templates.filter((t) => t.status === "APPROVED")
+                          .length === 0 && (
+                          <SelectItem value="" disabled>
+                            אין תבניות מאושרות זמינות
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                {selectedTemplate && (
+                  <div className="p-3 bg-muted rounded-md text-right">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      תצוגה מקדימה של התבנית:
+                    </p>
+                    {templates
+                      .find((t) => t.name === selectedTemplate)
+                      ?.components?.map((comp, idx) => (
+                        <div key={idx} className="text-sm mb-1">
+                          {comp.type === "HEADER" && comp.text && (
+                            <div className="font-semibold">{comp.text}</div>
+                          )}
+                          {comp.type === "BODY" && comp.text && (
+                            <div>{comp.text}</div>
+                          )}
+                          {comp.type === "FOOTER" && comp.text && (
+                            <div className="text-xs text-muted-foreground">
+                              {comp.text}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleSendTemplate}
+                  disabled={
+                    !phoneNumber.trim() || !selectedTemplate || isSending
+                  }
+                  className="w-full gap-2"
+                >
+                  {isSending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      שולח תבנית...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquareTemplate className="h-4 w-4" />
+                      שלח תבנית הודעה
+                    </>
+                  )}
+                </Button>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 
@@ -242,6 +567,11 @@ export default function MessagesTab() {
                         <Badge variant="secondary" className="text-xs">
                           {formatPhoneNumber(message.phoneNumber)}
                         </Badge>
+                        {message.type === "template" && (
+                          <Badge variant="outline" className="text-xs">
+                            תבנית: {message.templateName}
+                          </Badge>
+                        )}
                         {message.direction === "outgoing" && (
                           <div className="flex items-center gap-1">
                             {getStatusIcon(message.status)}
@@ -254,6 +584,18 @@ export default function MessagesTab() {
                       <p className="text-sm text-right" dir="rtl">
                         {message.content}
                       </p>
+                      {message.error && (
+                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-right">
+                          <p className="text-xs text-red-600">
+                            ❌ שגיאה: {message.error}
+                          </p>
+                        </div>
+                      )}
+                      {message.whatsappMessageId && (
+                        <p className="text-xs opacity-50 mt-1 text-right">
+                          ID: {message.whatsappMessageId}
+                        </p>
+                      )}
                       <p className="text-xs opacity-75 mt-2 text-right">
                         {message.timestamp.toLocaleString("he-IL")}
                       </p>
