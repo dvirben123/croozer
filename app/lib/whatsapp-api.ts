@@ -1,15 +1,7 @@
 // Direct WhatsApp Graph API integration
 const WHATSAPP_API_URL = 'https://graph.facebook.com/v22.0';
-const PHONE_NUMBER_ID = '729914410216285'; // From your curl command
+const PHONE_NUMBER_ID = '821921634328544'; // Your correct phone number ID
 const ACCESS_TOKEN = 'EAASQIsZA2JqABPXWRCUjrbsVnrTKtIJwnxUkBezTyJiSUwX5FuccTD3s0KIH3O90pjJCYt0aNjNFAv5NaO6vXPWZCcsw0mVxHnvEAUnfgy6v3lTHO7FJ7Pos3uHm2iwvipnrQVIjtQmTvUqzj8h4TJ3pRPZCqs2qhEle1rVffI1qZBaGaPWRFH5OkGsYX4aax7F9tSGJ7rTRXPMteQf6kMnLJFOBjTnXTzCpehvEAZC2AH4CmZB00JK5mn5keW5gZDZD';
-
-// WhatsApp Test Phone Numbers for Development
-// Use these numbers during development to avoid "invalid test phone number" errors
-export const TEST_PHONE_NUMBERS = {
-    US: '+15550101010',
-    US_ALT: '+15550199999',
-    WEBHOOK_TEST: '+15551234567'
-};
 
 export interface SendMessageRequest {
     phoneNumber: string;
@@ -163,7 +155,7 @@ class WhatsAppAPI {
     async getTemplates(): Promise<ApiResponse<any[]>> {
         try {
             // Get templates from WhatsApp Business Account
-            const wabaId = '2040143710146940'; // Your WABA ID
+            const wabaId = '2040143710146940'; // Your WABA ID (keep the same as it works)
             const response = await fetch(`${this.baseUrl}/${wabaId}/message_templates?fields=id,name,status,category,language,components`, {
                 method: 'GET',
                 headers: {
