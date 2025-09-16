@@ -26,7 +26,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import whatsappAPI from "@/lib/whatsapp-api";
+import whatsappAPI, { TEST_PHONE_NUMBERS } from "@/lib/whatsapp-api";
 
 interface Message {
   id: string;
@@ -400,12 +400,34 @@ export default function MessagesTab() {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+972526581731"
+                    placeholder="+15550101010"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     className="pr-10 text-left"
                     dir="ltr"
                   />
+                </div>
+
+                {/* Test Phone Numbers Helper */}
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-xs text-blue-800 font-medium text-right mb-2">
+                    📞 מספרי טלפון לבדיקה (Test Numbers):
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-end">
+                    {Object.entries(TEST_PHONE_NUMBERS).map(([key, number]) => (
+                      <button
+                        key={key}
+                        onClick={() => setPhoneNumber(number)}
+                        className="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs rounded border border-blue-300 transition-colors"
+                        type="button"
+                      >
+                        {number}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-blue-600 text-right mt-2">
+                    לחץ על מספר כדי להשתמש בו
+                  </p>
                 </div>
               </div>
 

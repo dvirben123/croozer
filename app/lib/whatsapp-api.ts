@@ -3,6 +3,14 @@ const WHATSAPP_API_URL = 'https://graph.facebook.com/v22.0';
 const PHONE_NUMBER_ID = '729914410216285'; // From your curl command
 const ACCESS_TOKEN = 'EAASQIsZA2JqABPXWRCUjrbsVnrTKtIJwnxUkBezTyJiSUwX5FuccTD3s0KIH3O90pjJCYt0aNjNFAv5NaO6vXPWZCcsw0mVxHnvEAUnfgy6v3lTHO7FJ7Pos3uHm2iwvipnrQVIjtQmTvUqzj8h4TJ3pRPZCqs2qhEle1rVffI1qZBaGaPWRFH5OkGsYX4aax7F9tSGJ7rTRXPMteQf6kMnLJFOBjTnXTzCpehvEAZC2AH4CmZB00JK5mn5keW5gZDZD';
 
+// WhatsApp Test Phone Numbers for Development
+// Use these numbers during development to avoid "invalid test phone number" errors
+export const TEST_PHONE_NUMBERS = {
+    US: '+15550101010',
+    US_ALT: '+15550199999',
+    WEBHOOK_TEST: '+15551234567'
+};
+
 export interface SendMessageRequest {
     phoneNumber: string;
     message: string;
