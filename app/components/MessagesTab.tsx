@@ -6,8 +6,8 @@ import {
   Phone,
   Loader2,
   CheckCircle2,
-  MessageSquareTemplate,
   AlertCircle,
+  MessageSquareIcon,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -385,7 +385,7 @@ export default function MessagesTab() {
                   הודעת טקסט
                 </TabsTrigger>
                 <TabsTrigger value="template" className="gap-2">
-                  <MessageSquareTemplate className="h-4 w-4" />
+                  <MessageSquareIcon className="h-4 w-4" />
                   תבנית הודעה
                 </TabsTrigger>
               </TabsList>
@@ -529,7 +529,7 @@ export default function MessagesTab() {
                     </>
                   ) : (
                     <>
-                      <MessageSquareTemplate className="h-4 w-4" />
+                      <MessageSquareIcon className="h-4 w-4" />
                       שלח תבנית הודעה
                     </>
                   )}
