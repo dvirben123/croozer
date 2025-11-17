@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       count: messages.length,
-      messages,
+      data: messages,
     });
 
   } catch (error) {

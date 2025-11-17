@@ -10,6 +10,8 @@ import {
   MessageSquareIcon,
   RefreshCw,
   User,
+  X,
+  Plus,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -44,16 +46,20 @@ interface IncomingMessage {
   processed: boolean;
 }
 
+interface PhoneConversation {
+  phoneNumber: string;
+  messages: Message[];
+  unreadCount: number;
+}
+
 export default function InteractiveMessagesTab() {
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [newPhoneNumber, setNewPhoneNumber] = useState("");
   const [messageContent, setMessageContent] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [incomingMessages, setIncomingMessages] = useState<IncomingMessage[]>([]);
+  const [conversations, setConversations] = useState<PhoneConversation[]>([]);
+  const [activePhoneTab, setActivePhoneTab] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isLoadingIncoming, setIsLoadingIncoming] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<
-    "unknown" | "connected" | "disconnected"
-  >("unknown");
+  const [showNewConversation, setShowNewConversation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -62,12 +68,10 @@ export default function InteractiveMessagesTab() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [conversations, activePhoneTab]);
 
   useEffect(() => {
-    // Test backend connection
-    testConnection();
-    // Load incoming messages
+    // Load incoming messages on mount
     fetchIncomingMessages();
     
     // Auto-refresh incoming messages every 10 seconds
@@ -75,43 +79,15 @@ export default function InteractiveMessagesTab() {
     return () => clearInterval(interval);
   }, []);
 
-  // Merge incoming messages with outgoing messages
-  useEffect(() => {
-    const merged = [...messages];
+  const formatPhoneNumber = (phone: string): string => {
+    // Remove any non-digit characters
+    const cleaned = phone.replace(/\D/g, "");
     
-    incomingMessages.forEach((incoming) => {
-      // Check if we already have this message
-      const exists = merged.some(m => m.whatsappMessageId === incoming.messageId);
-      if (!exists) {
-        merged.push({
-          id: incoming._id,
-          phoneNumber: formatPhoneNumber(incoming.from),
-          content: incoming.text || `(${incoming.type} message)`,
-          timestamp: new Date(incoming.timestamp),
-          status: "read",
-          direction: "incoming",
-          type: "text",
-          whatsappMessageId: incoming.messageId,
-        });
-      }
-    });
-    
-    // Sort by timestamp
-    merged.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-    
-    if (merged.length !== messages.length) {
-      setMessages(merged);
+    // Add + if not present
+    if (!phone.startsWith("+")) {
+      return "+" + cleaned;
     }
-  }, [incomingMessages]);
-
-  const testConnection = async () => {
-    try {
-      await whatsappAPI.testConnection();
-      setConnectionStatus("connected");
-    } catch (error) {
-      console.error("Backend connection failed:", error);
-      setConnectionStatus("disconnected");
-    }
+    return phone;
   };
 
   const fetchIncomingMessages = async () => {
@@ -120,22 +96,97 @@ export default function InteractiveMessagesTab() {
       const response = await fetch("/api/messages/incoming?limit=100");
       const data = await response.json();
       
-      if (data.success) {
-        setIncomingMessages(data.messages);
+      if (data.success && data.data) {
+        // Group messages by phone number
+        const messagesByPhone: { [key: string]: IncomingMessage[] } = {};
+        
+        data.data.forEach((msg: IncomingMessage) => {
+          const phone = formatPhoneNumber(msg.from);
+          if (!messagesByPhone[phone]) {
+            messagesByPhone[phone] = [];
+          }
+          messagesByPhone[phone].push(msg);
+        });
+
+        // Update conversations
+        setConversations((prevConversations) => {
+          const updatedConversations = [...prevConversations];
+
+          Object.entries(messagesByPhone).forEach(([phone, msgs]) => {
+            let conversation = updatedConversations.find(
+              (c) => c.phoneNumber === phone
+            );
+
+            if (!conversation) {
+              // Create new conversation
+              conversation = {
+                phoneNumber: phone,
+                messages: [],
+                unreadCount: 0,
+              };
+              updatedConversations.push(conversation);
+            }
+
+            // Add incoming messages that don't exist yet
+            msgs.forEach((incomingMsg) => {
+              const exists = conversation!.messages.some(
+                (m) => m.whatsappMessageId === incomingMsg.messageId
+              );
+
+              if (!exists) {
+                conversation!.messages.push({
+                  id: incomingMsg._id,
+                  phoneNumber: phone,
+                  content: incomingMsg.text || `(${incomingMsg.type} message)`,
+                  timestamp: new Date(incomingMsg.timestamp),
+                  status: "read",
+                  direction: "incoming",
+                  type: "text",
+                  whatsappMessageId: incomingMsg.messageId,
+                });
+                
+                // Increment unread count if not active tab
+                if (activePhoneTab !== phone) {
+                  conversation!.unreadCount++;
+                }
+              }
+            });
+
+            // Sort messages by timestamp
+            conversation.messages.sort(
+              (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+            );
+          });
+
+          // Sort conversations by latest message
+          updatedConversations.sort((a, b) => {
+            const aLatest = a.messages[a.messages.length - 1]?.timestamp || new Date(0);
+            const bLatest = b.messages[b.messages.length - 1]?.timestamp || new Date(0);
+            return bLatest.getTime() - aLatest.getTime();
+          });
+
+          return updatedConversations;
+        });
+
+        // Set active tab to first conversation if none selected
+        if (!activePhoneTab && Object.keys(messagesByPhone).length > 0) {
+          const firstPhone = Object.keys(messagesByPhone)[0];
+          setActivePhoneTab(firstPhone);
+        }
       }
     } catch (error) {
-      console.error("Failed to fetch incoming messages:", error);
+      console.error("Error fetching incoming messages:", error);
     } finally {
       setIsLoadingIncoming(false);
     }
   };
 
   const handleSendMessage = async () => {
-    if (!phoneNumber.trim() || !messageContent.trim() || isSending) return;
+    if (!activePhoneTab || !messageContent.trim() || isSending) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      phoneNumber: phoneNumber.trim(),
+      phoneNumber: activePhoneTab,
       content: messageContent.trim(),
       timestamp: new Date(),
       status: "sending",
@@ -143,42 +194,65 @@ export default function InteractiveMessagesTab() {
       type: "text",
     };
 
-    setMessages((prev) => [...prev, newMessage]);
+    // Add message to conversation
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.phoneNumber === activePhoneTab
+          ? { ...conv, messages: [...conv.messages, newMessage] }
+          : conv
+      )
+    );
     setMessageContent("");
     setIsSending(true);
 
     try {
-      const response = await fetch('/api/messages/send', {
-        method: 'POST',
+      const response = await fetch("/api/messages/send", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phoneNumber: phoneNumber.trim(),
+          phoneNumber: activePhoneTab,
           message: messageContent.trim(),
-          type: 'text',
+          type: "text",
         }),
       });
 
       const data = await response.json();
 
       if (data.success && data.data) {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === newMessage.id
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv.phoneNumber === activePhoneTab
               ? {
-                  ...msg,
-                  status: "sent",
-                  whatsappMessageId: data.data?.messages?.[0]?.id,
+                  ...conv,
+                  messages: conv.messages.map((msg) =>
+                    msg.id === newMessage.id
+                      ? {
+                          ...msg,
+                          status: "sent",
+                          whatsappMessageId: data.data?.messages?.[0]?.id,
+                        }
+                      : msg
+                  ),
                 }
-              : msg
+              : conv
           )
         );
 
         setTimeout(() => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === newMessage.id ? { ...msg, status: "delivered" } : msg
+          setConversations((prev) =>
+            prev.map((conv) =>
+              conv.phoneNumber === activePhoneTab
+                ? {
+                    ...conv,
+                    messages: conv.messages.map((msg) =>
+                      msg.id === newMessage.id
+                        ? { ...msg, status: "delivered" }
+                        : msg
+                    ),
+                  }
+                : conv
             )
           );
         }, 2000);
@@ -187,15 +261,25 @@ export default function InteractiveMessagesTab() {
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === newMessage.id
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.phoneNumber === activePhoneTab
             ? {
-                ...msg,
-                status: "failed",
-                error: error instanceof Error ? error.message : "Unknown error",
+                ...conv,
+                messages: conv.messages.map((msg) =>
+                  msg.id === newMessage.id
+                    ? {
+                        ...msg,
+                        status: "failed",
+                        error:
+                          error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                      }
+                    : msg
+                ),
               }
-            : msg
+            : conv
         )
       );
     } finally {
@@ -204,11 +288,11 @@ export default function InteractiveMessagesTab() {
   };
 
   const handleSendTemplate = async () => {
-    if (!phoneNumber.trim() || isSending) return;
+    if (!activePhoneTab || isSending) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      phoneNumber: phoneNumber.trim(),
+      phoneNumber: activePhoneTab,
       content: "Template: hello_world",
       timestamp: new Date(),
       status: "sending",
@@ -217,42 +301,64 @@ export default function InteractiveMessagesTab() {
       templateName: "hello_world",
     };
 
-    setMessages((prev) => [...prev, newMessage]);
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.phoneNumber === activePhoneTab
+          ? { ...conv, messages: [...conv.messages, newMessage] }
+          : conv
+      )
+    );
     setIsSending(true);
 
     try {
-      const response = await fetch('/api/messages/send', {
-        method: 'POST',
+      const response = await fetch("/api/messages/send", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phoneNumber: phoneNumber.trim(),
-          type: 'template',
-          templateName: 'hello_world',
-          languageCode: 'en_US',
+          phoneNumber: activePhoneTab,
+          type: "template",
+          templateName: "hello_world",
+          languageCode: "en_US",
         }),
       });
 
       const data = await response.json();
 
       if (data.success && data.data) {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === newMessage.id
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv.phoneNumber === activePhoneTab
               ? {
-                  ...msg,
-                  status: "sent",
-                  whatsappMessageId: data.data?.messages?.[0]?.id,
+                  ...conv,
+                  messages: conv.messages.map((msg) =>
+                    msg.id === newMessage.id
+                      ? {
+                          ...msg,
+                          status: "sent",
+                          whatsappMessageId: data.data?.messages?.[0]?.id,
+                        }
+                      : msg
+                  ),
                 }
-              : msg
+              : conv
           )
         );
 
         setTimeout(() => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === newMessage.id ? { ...msg, status: "delivered" } : msg
+          setConversations((prev) =>
+            prev.map((conv) =>
+              conv.phoneNumber === activePhoneTab
+                ? {
+                    ...conv,
+                    messages: conv.messages.map((msg) =>
+                      msg.id === newMessage.id
+                        ? { ...msg, status: "delivered" }
+                        : msg
+                    ),
+                  }
+                : conv
             )
           );
         }, 2000);
@@ -261,15 +367,25 @@ export default function InteractiveMessagesTab() {
       }
     } catch (error) {
       console.error("Error sending template:", error);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === newMessage.id
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.phoneNumber === activePhoneTab
             ? {
-                ...msg,
-                status: "failed",
-                error: error instanceof Error ? error.message : "Unknown error",
+                ...conv,
+                messages: conv.messages.map((msg) =>
+                  msg.id === newMessage.id
+                    ? {
+                        ...msg,
+                        status: "failed",
+                        error:
+                          error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                      }
+                    : msg
+                ),
               }
-            : msg
+            : conv
         )
       );
     } finally {
@@ -277,18 +393,65 @@ export default function InteractiveMessagesTab() {
     }
   };
 
+  const handleStartNewConversation = () => {
+    if (!newPhoneNumber.trim()) return;
+
+    const formattedPhone = formatPhoneNumber(newPhoneNumber.trim());
+
+    // Check if conversation already exists
+    const exists = conversations.some(
+      (c) => c.phoneNumber === formattedPhone
+    );
+
+    if (!exists) {
+      setConversations((prev) => [
+        {
+          phoneNumber: formattedPhone,
+          messages: [],
+          unreadCount: 0,
+        },
+        ...prev,
+      ]);
+    }
+
+    setActivePhoneTab(formattedPhone);
+    setNewPhoneNumber("");
+    setShowNewConversation(false);
+  };
+
+  const handleTabChange = (phoneNumber: string) => {
+    setActivePhoneTab(phoneNumber);
+    
+    // Clear unread count for this conversation
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.phoneNumber === phoneNumber
+          ? { ...conv, unreadCount: 0 }
+          : conv
+      )
+    );
+  };
+
   const getStatusIcon = (status: Message["status"]) => {
     switch (status) {
       case "sending":
-        return (
-          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-        );
+        return <Loader2 className="h-3 w-3 animate-spin text-gray-400" />;
       case "sent":
-        return <CheckCircle2 className="h-3 w-3 text-blue-500" />;
+        return <CheckCircle2 className="h-3 w-3 text-gray-400" />;
       case "delivered":
-        return <CheckCircle2 className="h-3 w-3 text-green-500" />;
+        return (
+          <div className="flex">
+            <CheckCircle2 className="h-3 w-3 text-blue-500 -mr-1" />
+            <CheckCircle2 className="h-3 w-3 text-blue-500" />
+          </div>
+        );
       case "read":
-        return <CheckCircle2 className="h-3 w-3 text-green-600" />;
+        return (
+          <div className="flex">
+            <CheckCircle2 className="h-3 w-3 text-green-500 -mr-1" />
+            <CheckCircle2 className="h-3 w-3 text-green-500" />
+          </div>
+        );
       case "failed":
         return <AlertCircle className="h-3 w-3 text-red-500" />;
       default:
@@ -296,278 +459,247 @@ export default function InteractiveMessagesTab() {
     }
   };
 
-  const getStatusText = (status: Message["status"]) => {
-    switch (status) {
-      case "sending":
-        return "שולח...";
-      case "sent":
-        return "נשלח";
-      case "delivered":
-        return "הועבר";
-      case "read":
-        return "נקרא";
-      case "failed":
-        return "נכשל";
-      default:
-        return "";
-    }
-  };
-
-  const formatPhoneNumber = (phone: string) => {
-    if (phone.startsWith("972")) {
-      return `+972 ${phone.substring(3, 5)}-${phone.substring(5)}`;
-    }
-    if (phone.startsWith("+972")) {
-      return phone.replace("+972", "+972 ");
-    }
-    return phone;
-  };
+  const activeConversation = conversations.find(
+    (c) => c.phoneNumber === activePhoneTab
+  );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="p-6 border-b border-border">
-        <div className="flex justify-between items-start">
-          <div className="text-right">
-            <h1 className="text-2xl font-bold">שיחות וואטסאפ</h1>
-            <p className="text-muted-foreground mt-1">
-              שלח וקבל הודעות בזמן אמת
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={fetchIncomingMessages}
-              disabled={isLoadingIncoming}
-              size="sm"
-              variant="outline"
-            >
-              <RefreshCw
-                className={`h-4 w-4 ml-2 ${isLoadingIncoming ? "animate-spin" : ""}`}
-              />
-              רענן
-            </Button>
-            {connectionStatus === "connected" && (
-              <Badge
-                variant="outline"
-                className="bg-green-50 text-green-700 border-green-200"
-              >
-                ✅ מחובר
-              </Badge>
-            )}
-            {connectionStatus === "disconnected" && (
-              <Badge
-                variant="outline"
-                className="bg-red-50 text-red-700 border-red-200"
-              >
-                ❌ לא מחובר
-              </Badge>
-            )}
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">הודעות WhatsApp</h2>
+          <p className="text-muted-foreground">
+            נהל שיחות עם לקוחות בזמן אמת
+          </p>
         </div>
-
-        {connectionStatus === "disconnected" && (
-          <Alert className="mt-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-right">
-              לא ניתן להתחבר ל-WhatsApp Business API. בדוק את הגדרות ה-API.
-            </AlertDescription>
-          </Alert>
-        )}
+        <Button
+          onClick={fetchIncomingMessages}
+          variant="outline"
+          size="sm"
+          disabled={isLoadingIncoming}
+        >
+          {isLoadingIncoming ? (
+            <Loader2 className="h-4 w-4 animate-spin ml-2" />
+          ) : (
+            <RefreshCw className="h-4 w-4 ml-2" />
+          )}
+          רענן
+        </Button>
       </div>
 
-      <div className="flex-1 flex gap-6 p-6 overflow-hidden">
-        {/* Conversation Area */}
-        <Card className="flex-1 flex flex-col">
-          <CardHeader>
-            <CardTitle className="text-right flex justify-between items-center">
-              <span>שיחה</span>
-              <Badge variant="outline">{messages.length} הודעות</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col overflow-hidden">
-            <ScrollArea className="flex-1 pr-4">
-              <div className="space-y-4">
-                {messages.length === 0 ? (
-                  <div className="text-center py-12">
-                    <MessageSquareIcon className="h-12 w-12 mx-auto text-muted-foreground" />
-                    <p className="mt-4 text-muted-foreground">
-                      אין הודעות עדיין
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      שלח הודעה כדי להתחיל שיחה
-                    </p>
-                  </div>
-                ) : (
-                  messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${
-                        message.direction === "outgoing"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={`max-w-[70%] rounded-lg p-3 ${
-                          message.direction === "outgoing"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          {message.direction === "incoming" && (
-                            <User className="h-3 w-3" />
-                          )}
-                          <Badge variant="secondary" className="text-xs">
-                            {formatPhoneNumber(message.phoneNumber)}
-                          </Badge>
-                          {message.type === "template" && (
-                            <Badge variant="outline" className="text-xs">
-                              תבנית
-                            </Badge>
-                          )}
-                          {message.direction === "outgoing" && (
-                            <div className="flex items-center gap-1">
-                              {getStatusIcon(message.status)}
-                              <span className="text-xs opacity-75">
-                                {getStatusText(message.status)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-sm text-right" dir="auto">
-                          {message.content}
-                        </p>
-                        {message.error && (
-                          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-right">
-                            <p className="text-xs text-red-600">
-                              ❌ שגיאה: {message.error}
-                            </p>
-                          </div>
-                        )}
-                        <p className="text-xs opacity-75 mt-2 text-right">
-                          {message.timestamp.toLocaleString("he-IL")}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-            </ScrollArea>
+      {/* Conversations */}
+      {conversations.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <MessageSquareIcon className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">אין שיחות פעילות</h3>
+            <p className="text-muted-foreground text-center mb-4">
+              התחל שיחה חדשה עם לקוח
+            </p>
+            <Button onClick={() => setShowNewConversation(true)}>
+              <Plus className="h-4 w-4 ml-2" />
+              שיחה חדשה
+            </Button>
           </CardContent>
         </Card>
-
-        {/* Send Message Panel */}
-        <Card className="w-96">
+      ) : (
+        <Card>
           <CardHeader>
-            <CardTitle className="text-right">שלח הודעה</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>שיחות</CardTitle>
+              <Button
+                onClick={() => setShowNewConversation(true)}
+                size="sm"
+                variant="outline"
+              >
+                <Plus className="h-4 w-4 ml-2" />
+                שיחה חדשה
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="text" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="text" className="gap-2">
-                  <Send className="h-4 w-4" />
-                  טקסט
-                </TabsTrigger>
-                <TabsTrigger value="template" className="gap-2">
-                  <MessageSquareIcon className="h-4 w-4" />
-                  תבנית
-                </TabsTrigger>
+            <Tabs value={activePhoneTab || undefined} onValueChange={handleTabChange}>
+              <TabsList className="w-full justify-start overflow-x-auto flex-wrap h-auto">
+                {conversations.map((conv) => (
+                  <TabsTrigger
+                    key={conv.phoneNumber}
+                    value={conv.phoneNumber}
+                    className="relative"
+                  >
+                    <Phone className="h-4 w-4 ml-2" />
+                    {conv.phoneNumber}
+                    {conv.unreadCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="mr-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                      >
+                        {conv.unreadCount}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
-              {/* Phone Number Field */}
-              <div className="space-y-2 mt-4">
-                <Label htmlFor="phone" className="text-right block">
-                  מספר טלפון
-                </Label>
-                <div className="relative">
-                  <Phone className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="972526581731"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="pr-10 text-left"
-                    dir="ltr"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground text-right">
-                  ללא + (לדוגמה: 972526581731)
-                </p>
-              </div>
-
-              {/* Text Message Tab */}
-              <TabsContent value="text" className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="message" className="text-right block">
-                    תוכן ההודעה
-                  </Label>
-                  <Textarea
-                    id="message"
-                    placeholder="הקלד את ההודעה שלך כאן..."
-                    value={messageContent}
-                    onChange={(e) => setMessageContent(e.target.value)}
-                    rows={4}
-                    className="text-right"
-                    dir="rtl"
-                  />
-                </div>
-
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={
-                    !phoneNumber.trim() || !messageContent.trim() || isSending
-                  }
-                  className="w-full gap-2"
+              {conversations.map((conv) => (
+                <TabsContent
+                  key={conv.phoneNumber}
+                  value={conv.phoneNumber}
+                  className="space-y-4 mt-4"
                 >
-                  {isSending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      שולח...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      שלח הודעה
-                    </>
-                  )}
-                </Button>
-              </TabsContent>
+                  {/* Messages Area */}
+                  <ScrollArea className="h-[400px] border rounded-lg p-4 bg-muted/20">
+                    {conv.messages.length === 0 ? (
+                      <div className="flex items-center justify-center h-full text-muted-foreground">
+                        <div className="text-center">
+                          <MessageSquareIcon className="h-8 w-8 mx-auto mb-2" />
+                          <p>אין הודעות עדיין</p>
+                          <p className="text-sm">שלח הודעה כדי להתחיל שיחה</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {conv.messages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`flex ${
+                              msg.direction === "outgoing"
+                                ? "justify-end"
+                                : "justify-start"
+                            }`}
+                          >
+                            <div
+                              className={`max-w-[70%] rounded-lg p-3 ${
+                                msg.direction === "outgoing"
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-muted"
+                              }`}
+                            >
+                              <p className="text-sm whitespace-pre-wrap break-words">
+                                {msg.content}
+                              </p>
+                              <div className="flex items-center justify-end gap-2 mt-1">
+                                <span className="text-xs opacity-70">
+                                  {msg.timestamp.toLocaleTimeString("he-IL", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                                {msg.direction === "outgoing" &&
+                                  getStatusIcon(msg.status)}
+                              </div>
+                              {msg.error && (
+                                <Alert className="mt-2 py-1 px-2">
+                                  <AlertDescription className="text-xs">
+                                    {msg.error}
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    )}
+                  </ScrollArea>
 
-              {/* Template Message Tab */}
-              <TabsContent value="template" className="space-y-4 mt-4">
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-right text-green-800">
-                    תבנית hello_world תישלח ללקוח
-                  </AlertDescription>
-                </Alert>
-
-                <Button
-                  onClick={handleSendTemplate}
-                  disabled={!phoneNumber.trim() || isSending}
-                  className="w-full gap-2"
-                >
-                  {isSending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      שולח תבנית...
-                    </>
-                  ) : (
-                    <>
-                      <MessageSquareIcon className="h-4 w-4" />
-                      שלח תבנית
-                    </>
-                  )}
-                </Button>
-              </TabsContent>
+                  {/* Message Input */}
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Textarea
+                        placeholder="הקלד הודעה..."
+                        value={messageContent}
+                        onChange={(e) => setMessageContent(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                        className="min-h-[80px] resize-none"
+                      />
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          onClick={handleSendMessage}
+                          disabled={!messageContent.trim() || isSending}
+                          className="flex-1"
+                        >
+                          {isSending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          onClick={handleSendTemplate}
+                          disabled={isSending}
+                          variant="outline"
+                          className="flex-1"
+                          title="שלח תבנית hello_world"
+                        >
+                          תבנית
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      לחץ Enter לשליחה, Shift+Enter לשורה חדשה
+                    </p>
+                  </div>
+                </TabsContent>
+              ))}
             </Tabs>
           </CardContent>
         </Card>
-      </div>
+      )}
+
+      {/* New Conversation Dialog */}
+      {showNewConversation && (
+        <Card className="border-primary">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>שיחה חדשה</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowNewConversation(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPhone">מספר טלפון</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="newPhone"
+                  type="tel"
+                  placeholder="+972526581731"
+                  value={newPhoneNumber}
+                  onChange={(e) => setNewPhoneNumber(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleStartNewConversation();
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={handleStartNewConversation}
+                  disabled={!newPhoneNumber.trim()}
+                >
+                  <Phone className="h-4 w-4 ml-2" />
+                  התחל
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                הזן מספר טלפון בפורמט בינלאומי (לדוגמה: +972526581731)
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
-

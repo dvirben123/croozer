@@ -15,16 +15,8 @@ export default function AuthGuard({
   redirectTo = "/login",
   fallback,
 }: AuthGuardProps) {
-  // Check for development bypass environment variable
-  const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === "true";
-
   const { isLoading, isAuthenticated, user, loginStatus } =
     useAuthGuard(redirectTo);
-
-  // If bypass is enabled, render children directly
-  if (bypassAuth) {
-    return <>{children}</>;
-  }
 
   // Show loading state while checking authentication
   if (isLoading || loginStatus === "loading") {

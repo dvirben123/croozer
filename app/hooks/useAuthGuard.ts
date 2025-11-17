@@ -14,32 +14,12 @@ interface AuthState {
 export const useAuthGuard = (redirectTo: string = "/login") => {
     const router = useRouter();
 
-    // Check for development bypass environment variable
-    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === "true";
-
     const [authState, setAuthState] = useState<AuthState>({
-        isLoading: bypassAuth ? false : true,
-        isAuthenticated: bypassAuth ? true : false,
-        user: bypassAuth ? {
-            id: "bypass-user",
-            name: "Development User",
-            email: "dev@croozer.co.il",
-            picture: { data: { url: "", is_silhouette: false } }
-        } : null,
-        loginStatus: bypassAuth ? "connected" : "loading",
+        isLoading: true,
+        isAuthenticated: false,
+        user: null,
+        loginStatus: "loading",
     });
-
-    // If bypass is enabled, return early with authenticated state
-    if (bypassAuth) {
-        const logout = useCallback(() => {
-            console.log("Logout called in bypass mode - no action needed");
-        }, []);
-
-        return {
-            ...authState,
-            logout,
-        };
-    }
 
     // Get user info from Facebook API
     const getUserInfo = useCallback(() => {
