@@ -414,6 +414,16 @@ export default function MessagesTab() {
 
               {/* Text Message Tab */}
               <TabsContent value="text" className="space-y-4 mt-4">
+                <Alert className="bg-yellow-50 border-yellow-200">
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-right text-yellow-800">
+                    <strong>הודעות טקסט חופשיות:</strong> ניתן לשלוח רק אם
+                    המשתמש שלח הודעה בעבר או תוך 24 שעות מהתקשרות.
+                    <br />
+                    <strong>לשיווק:</strong> השתמש בתבניות הודעה מאושרות.
+                  </AlertDescription>
+                </Alert>
+
                 <div className="space-y-2">
                   <Label htmlFor="message" className="text-right block">
                     תוכן ההודעה
@@ -452,6 +462,14 @@ export default function MessagesTab() {
 
               {/* Template Message Tab */}
               <TabsContent value="template" className="space-y-4 mt-4">
+                <Alert className="bg-green-50 border-green-200">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-right text-green-800">
+                    <strong>תבניות מאושרות:</strong> ניתן לשלוח לכל מספר ללא
+                    הגבלות זמן. מומלץ לשיווק ועדכונים.
+                  </AlertDescription>
+                </Alert>
+
                 <div className="space-y-2">
                   <Label htmlFor="template" className="text-right block">
                     בחר תבנית הודעה

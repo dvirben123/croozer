@@ -4,7 +4,7 @@ import { useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardOverview from "@/components/DashboardOverview";
-import MessagesTab from "@/components/MessagesTab";
+import InteractiveMessagesTab from "@/components/InteractiveMessagesTab";
 import ProfileTab from "@/components/ProfileTab";
 import SettingsTab from "@/components/SettingsTab";
 
@@ -18,7 +18,7 @@ export default function DashboardPage() {
       case "overview":
         return <DashboardOverview />;
       case "messages":
-        return <MessagesTab />;
+        return <InteractiveMessagesTab />;
       case "profile":
         return <ProfileTab />;
       case "settings":

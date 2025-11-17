@@ -1,0 +1,490 @@
+# WhatsApp Business API - Project Rules & Guidelines
+
+## 🎯 Overview
+
+This project uses **WhatsApp Cloud API** for multi-tenant business messaging.
+All businesses connect their WhatsApp accounts via Meta's Embedded Signup flow.
+
+---
+
+## 📋 Environment Configuration
+
+### Required Environment Variables
+
+```env
+# Meta Business Platform (PERMANENT TOKENS)
+META_SYSTEM_USER_ACCESS_TOKEN=<permanent_system_user_token>
+META_BUSINESS_MANAGER_ID=<business_manager_id>
+META_APP_ID=<whatsapp_app_id>
+META_APP_SECRET=<whatsapp_app_secret>
+
+# WhatsApp Business API (VERIFIED VALUES)
+WHATSAPP_PHONE_NUMBER_ID=789427540931519
+WHATSAPP_BUSINESS_ACCOUNT_ID=1980175552606363
+
+# Security (NEVER COMMIT THESE)
+ENCRYPTION_KEY=<64_char_hex_string>
+ENCRYPTION_IV=<32_char_hex_string>
+
+# Database
+MONGODB_URI=<mongodb_connection_string>
+```
+
+### ⚠️ Critical Rules
+
+1. **ALWAYS use `WHATSAPP_PHONE_NUMBER_ID` from .env** - Never hardcode
+2. **NEVER commit `.env` file** - Already in `.gitignore`
+3. **Use permanent System User tokens** - They never expire
+4. **Encrypt all customer tokens** - Use `EncryptionService`
+
+---
+
+## 🏗️ Architecture Rules
+
+### Multi-Tenant Design
+
+```typescript
+// ✅ CORRECT - Use business-specific credentials
+const service = new MultiTenantWhatsAppService();
+await service.sendMessage(businessId, {
+  phoneNumber: recipient,
+  message: content
+});
+
+// ❌ WRONG - Don't use global credentials for customer messages
+const response = await fetch(url, {
+  headers: { 'Authorization': `Bearer ${process.env.META_SYSTEM_USER_ACCESS_TOKEN}` }
+});
+```
+
+### Token Management
+
+1. **System User Token** - Used for platform operations (our token)
+2. **Business Tokens** - Stored encrypted in database (customer tokens)
+3. **Never mix the two** - System token ≠ Business token
+
+---
+
+## 📱 WhatsApp API Guidelines
+
+### Phone Number Format
+
+```typescript
+// ✅ CORRECT - No + or spaces
+const phoneNumber = "972526581731";
+
+// ❌ WRONG
+const phoneNumber = "+972-52-658-1731";
+const phoneNumber = "+972 52 658 1731";
+```
+
+### Message Types
+
+#### 1. Template Messages (Recommended)
+
+```typescript
+// ✅ Can be sent to ANY number, anytime
+{
+  messaging_product: "whatsapp",
+  to: "972526581731",
+  type: "template",
+  template: {
+    name: "hello_world",
+    language: { code: "en_US" }
+  }
+}
+```
+
+**Use for:**
+- Marketing messages
+- Notifications
+- First contact with customers
+- Messages outside 24h window
+
+#### 2. Text Messages (Restricted)
+
+```typescript
+// ⚠️ Only works within 24h window after user messages you
+{
+  messaging_product: "whatsapp",
+  to: "972526581731",
+  type: "text",
+  text: {
+    body: "Your message here"
+  }
+}
+```
+
+**Use for:**
+- Replies to customer messages
+- Conversations within 24h window
+- Customer support responses
+
+### API Endpoint Structure
+
+```typescript
+// ✅ CORRECT - Use v24.0 or latest
+const url = `https://graph.facebook.com/v24.0/${phoneNumberId}/messages`;
+
+// ❌ WRONG - Don't use deprecated versions
+const url = `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`;
+```
+
+---
+
+## 🔐 Security Rules
+
+### Token Encryption
+
+```typescript
+// ✅ CORRECT - Always encrypt before storing
+import { EncryptionService } from '@/lib/services/EncryptionService';
+
+const encryptedToken = EncryptionService.encrypt(accessToken);
+await BusinessWhatsAppAccount.create({
+  accessToken: encryptedToken, // Encrypted
+  // ...
+});
+
+// ❌ WRONG - Never store plain tokens
+await BusinessWhatsAppAccount.create({
+  accessToken: plainToken, // SECURITY RISK!
+});
+```
+
+### Environment Variables
+
+```typescript
+// ✅ CORRECT - Read from process.env
+const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+
+// ❌ WRONG - Never hardcode
+const phoneNumberId = "789427540931519";
+```
+
+---
+
+## 📂 Project Structure Rules
+
+### Scripts Organization
+
+```
+scripts/
+├── send-message.ts          # Main script for sending messages
+├── setup/                   # One-time setup scripts
+├── testing/                 # Verification scripts
+└── utils/                   # Utility scripts
+```
+
+**Rules:**
+1. **Use `send-message.ts`** for all manual message sending
+2. **Never create duplicate scripts** - Organize into folders
+3. **Document all scripts** in `scripts/README.md`
+
+### Component Structure
+
+```
+app/components/
+├── MessagesTab.tsx          # WhatsApp messaging UI
+├── DashboardSidebar.tsx     # Navigation
+└── ui/                      # Shadcn components
+```
+
+**Rules:**
+1. **Keep components small** - Max 500 lines
+2. **Use Shadcn UI** - Don't create custom UI components
+3. **All text in Hebrew** - Use translations from `he.json`
+
+---
+
+## 🧪 Testing Rules
+
+### Before Sending Messages
+
+1. **Add test numbers** in Meta dashboard:
+   - Go to: https://developers.facebook.com/apps/whatsapp-business/wa-dev-console/
+   - Add recipient phone number
+   - Verify with code sent to WhatsApp
+
+2. **Use template messages first** - They always work
+
+3. **Check token status**:
+   ```bash
+   npx tsx scripts/testing/check-token-info.ts
+   ```
+
+### Common Errors & Solutions
+
+| Error Code | Meaning | Solution |
+|------------|---------|----------|
+| 131026 | Recipient not registered | Add as test number in Meta dashboard |
+| 131047 | 24h window expired | Use template message instead |
+| 190 | Invalid token | Regenerate access token |
+| 100 | Invalid parameter | Check phone number format |
+| 12 | Deprecated endpoint | Use API v24.0+ |
+
+---
+
+## 🚀 Development Workflow
+
+### 1. Setup (One-time)
+
+```bash
+# Generate encryption keys
+npx tsx scripts/setup/generate-encryption-keys.ts
+
+# Verify Meta API setup
+npx tsx scripts/testing/test-meta-api.ts
+
+# Check phone number status
+npx tsx scripts/testing/check-phone-status.ts
+```
+
+### 2. Development
+
+```bash
+# Start dev server
+pnpm dev
+
+# Test messaging
+npx tsx scripts/send-message.ts
+```
+
+### 3. Testing
+
+```bash
+# Verify token
+npx tsx scripts/testing/check-token-info.ts
+
+# Test API
+npx tsx scripts/testing/test-meta-api.ts
+```
+
+---
+
+## 📊 Database Models
+
+### BusinessWhatsAppAccount
+
+```typescript
+{
+  businessId: ObjectId,           // Reference to Business
+  whatsappBusinessAccountId: string,
+  phoneNumberId: string,          // CRITICAL - Used for API calls
+  phoneNumber: string,
+  displayName: string,
+  accessToken: string,            // ENCRYPTED
+  tokenType: 'permanent' | 'temporary',
+  status: 'active' | 'suspended' | 'disconnected',
+  // ...
+}
+```
+
+**Rules:**
+1. **Always encrypt `accessToken`** before saving
+2. **Use `phoneNumberId`** for API calls (not `phoneNumber`)
+3. **Check `status`** before sending messages
+
+---
+
+## 🔄 Message Flow
+
+### Outgoing Messages
+
+```
+User Input → MessagesTab.tsx → whatsapp-api.ts → WhatsApp Cloud API
+                                       ↓
+                                 MongoDB (log)
+```
+
+### Incoming Messages (Sprint 2)
+
+```
+WhatsApp Cloud API → Webhook → MultiTenantWhatsAppService → MongoDB
+                                        ↓
+                                  Dashboard UI
+```
+
+---
+
+## 📝 Code Style Rules
+
+### TypeScript
+
+```typescript
+// ✅ CORRECT - Use interfaces
+interface SendMessageRequest {
+  phoneNumber: string;
+  message: string;
+}
+
+// ✅ CORRECT - Async/await
+async function sendMessage(req: SendMessageRequest) {
+  const response = await fetch(url, options);
+  return await response.json();
+}
+
+// ❌ WRONG - Don't use .then()
+function sendMessage(req: SendMessageRequest) {
+  return fetch(url, options).then(r => r.json());
+}
+```
+
+### Database Connection
+
+```typescript
+// ✅ CORRECT - Default import
+import dbConnect from '@/lib/mongodb';
+
+async function handler() {
+  await dbConnect();
+  const data = await Model.find();
+  return data;
+}
+
+// ❌ WRONG - Named import (doesn't exist)
+import { connectDB } from '@/lib/mongodb'; // ERROR!
+```
+
+### Error Handling
+
+```typescript
+// ✅ CORRECT - Detailed error messages
+try {
+  const response = await sendMessage(data);
+} catch (error) {
+  if (error.code === 131026) {
+    throw new Error('Recipient not registered as test number');
+  }
+  throw error;
+}
+
+// ❌ WRONG - Generic errors
+try {
+  await sendMessage(data);
+} catch (error) {
+  throw new Error('Failed');
+}
+```
+
+---
+
+## 🎨 UI/UX Rules
+
+### Hebrew Language
+
+```typescript
+// ✅ CORRECT - All UI text in Hebrew
+<Label>מספר טלפון</Label>
+<Button>שלח הודעה</Button>
+
+// ❌ WRONG - English text
+<Label>Phone Number</Label>
+<Button>Send Message</Button>
+```
+
+### Responsive Design
+
+```typescript
+// ✅ CORRECT - Mobile-first
+<div className="flex flex-col md:flex-row gap-4">
+  <Card className="w-full md:w-96">...</Card>
+</div>
+
+// ❌ WRONG - Fixed widths
+<div style={{ width: '400px' }}>...</div>
+```
+
+---
+
+## 🔗 Important Links
+
+### Meta Platform
+- [App Dashboard](https://developers.facebook.com/apps/1284378939762336/)
+- [WhatsApp API Setup](https://developers.facebook.com/apps/1284378939762336/whatsapp-business/wa-dev-console/)
+- [Business Manager](https://business.facebook.com/)
+
+### Documentation
+- [WhatsApp Cloud API Docs](https://developers.facebook.com/docs/whatsapp/cloud-api)
+- [Message Templates](https://developers.facebook.com/docs/whatsapp/message-templates)
+- [Embedded Signup](https://developers.facebook.com/docs/whatsapp/embedded-signup)
+
+### Project Docs
+- `META-SETUP-CHECKLIST.md` - Complete setup guide
+- `scripts/README.md` - Scripts documentation
+- `IMPLEMENTATION-ROADMAP.md` - Development roadmap
+
+---
+
+## ✅ Checklist for New Features
+
+Before implementing WhatsApp features:
+
+- [ ] Check if token is permanent (`check-token-info.ts`)
+- [ ] Verify phone number is registered
+- [ ] Encrypt all sensitive data
+- [ ] Use multi-tenant service (don't use system token directly)
+- [ ] Add error handling for common WhatsApp errors
+- [ ] Test with template messages first
+- [ ] Add Hebrew translations
+- [ ] Make UI responsive
+- [ ] Document in appropriate README
+
+---
+
+## 🔧 Common Issues & Solutions
+
+### Database Connection
+
+**Issue**: `connectDB is not a function`
+
+**Problem**: The MongoDB connection function is exported as `default dbConnect`, not as a named export.
+
+**Solution**:
+
+```typescript
+// ✅ CORRECT
+import dbConnect from '@/lib/mongodb';
+await dbConnect();
+
+// ❌ WRONG
+import { connectDB } from '@/lib/mongodb';
+await connectDB();
+```
+
+**Files affected**:
+- `app/lib/mongodb.ts` - Exports `default dbConnect`
+- All API routes and webhooks must use correct import
+
+---
+
+## 🚨 Critical Don'ts
+
+1. ❌ **NEVER commit `.env` file**
+2. ❌ **NEVER hardcode phone numbers or tokens**
+3. ❌ **NEVER use system token for customer messages**
+4. ❌ **NEVER store unencrypted tokens in database**
+5. ❌ **NEVER send messages without checking business status**
+6. ❌ **NEVER use old/wrong Phone Number ID**
+7. ❌ **NEVER create duplicate scripts**
+8. ❌ **NEVER skip error handling**
+9. ❌ **NEVER use wrong import for dbConnect** (use `default import`)
+
+---
+
+## 📅 Maintenance
+
+### Weekly
+- Check token expiration (should be permanent = never)
+- Monitor message delivery rates
+- Review error logs
+
+### Monthly
+- Update API version if needed
+- Review and update message templates
+- Check for Meta API deprecations
+
+---
+
+**Last Updated**: November 17, 2025
+**Next Review**: Sprint 1 completion

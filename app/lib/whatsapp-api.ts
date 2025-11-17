@@ -1,7 +1,7 @@
 // Direct WhatsApp Graph API integration
 const WHATSAPP_API_URL = 'https://graph.facebook.com/v22.0';
-const PHONE_NUMBER_ID = '821921634328544'; // Your correct phone number ID
-const ACCESS_TOKEN = 'EAASQIsZA2JqABPXWRCUjrbsVnrTKtIJwnxUkBezTyJiSUwX5FuccTD3s0KIH3O90pjJCYt0aNjNFAv5NaO6vXPWZCcsw0mVxHnvEAUnfgy6v3lTHO7FJ7Pos3uHm2iwvipnrQVIjtQmTvUqzj8h4TJ3pRPZCqs2qhEle1rVffI1qZBaGaPWRFH5OkGsYX4aax7F9tSGJ7rTRXPMteQf6kMnLJFOBjTnXTzCpehvEAZC2AH4CmZB00JK5mn5keW5gZDZD';
+const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || '789427540931519';
+const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || process.env.META_SYSTEM_USER_ACCESS_TOKEN || '';
 
 export interface SendMessageRequest {
     phoneNumber: string;
@@ -82,7 +82,21 @@ class WhatsAppAPI {
 
             if (!response.ok) {
                 const errorData = data as WhatsAppErrorResponse;
-                throw new Error(errorData.error?.message || 'Failed to send message');
+                console.error('WhatsApp API Error:', errorData);
+                const errorMessage = errorData.error?.message || 'Failed to send message';
+                const errorCode = errorData.error?.code;
+                const errorSubcode = errorData.error?.error_subcode;
+
+                // Provide more specific error messages
+                if (errorMessage.includes('Message failed to send because more than 24 hours have passed')) {
+                    throw new Error('Cannot send text message: 24-hour window expired. Use template messages instead.');
+                } else if (errorMessage.includes('This message is sent outside of allowed window')) {
+                    throw new Error('Cannot send text message outside 24-hour window. Use template messages for marketing.');
+                } else if (errorCode === 131049) {
+                    throw new Error('Cannot send text message: User must message you first or use template messages.');
+                }
+
+                throw new Error(`${errorMessage} (Code: ${errorCode}${errorSubcode ? `, Subcode: ${errorSubcode}` : ''})`);
             }
 
             return {
@@ -155,7 +169,7 @@ class WhatsAppAPI {
     async getTemplates(): Promise<ApiResponse<any[]>> {
         try {
             // Get templates from WhatsApp Business Account
-            const wabaId = '2040143710146940'; // Your WABA ID (keep the same as it works)
+            const wabaId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || '1980175552606363';
             const response = await fetch(`${this.baseUrl}/${wabaId}/message_templates?fields=id,name,status,category,language,components`, {
                 method: 'GET',
                 headers: {
