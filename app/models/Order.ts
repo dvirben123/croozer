@@ -350,7 +350,7 @@ OrderSchema.methods.canBeCancelled = function (): boolean {
 };
 
 OrderSchema.methods.calculateTotal = function (): number {
-  const subtotal = this.items.reduce((sum, item) => sum + item.subtotal, 0);
+  const subtotal = this.items.reduce((sum: number, item: IOrderItem) => sum + item.subtotal, 0);
   return subtotal + (this.tax || 0) + (this.deliveryFee || 0) - (this.discount || 0);
 };
 

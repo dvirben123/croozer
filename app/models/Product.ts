@@ -1,14 +1,16 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
+export interface IProductVariantOption {
+  label: string;
+  labelHe?: string;
+  priceModifier: number;
+}
+
 export interface IProductVariant {
   name: string;
   nameHe?: string;
   required: boolean;
-  options: Array<{
-    label: string;
-    labelHe?: string;
-    priceModifier: number;
-  }>;
+  options: IProductVariantOption[];
 }
 
 export interface IProductImage {
@@ -345,8 +347,8 @@ ProductSchema.methods.getPriceWithVariants = function (selectedVariants: string[
   let totalPrice = this.price;
 
   if (this.hasVariants && this.variants && selectedVariants.length > 0) {
-    this.variants.forEach((variant) => {
-      variant.options.forEach((option) => {
+    this.variants.forEach((variant: IProductVariant) => {
+      variant.options.forEach((option: IProductVariantOption) => {
         if (selectedVariants.includes(option.label)) {
           totalPrice += option.priceModifier;
         }

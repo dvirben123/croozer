@@ -38,6 +38,14 @@ export interface IBusinessWhatsAppAccount extends Document {
 
   createdAt: Date;
   updatedAt: Date;
+
+  // Instance methods
+  isActive(): boolean;
+  isHealthy(): boolean;
+  needsTokenRefresh(): boolean;
+  updateLastMessageSent(): Promise<void>;
+  updateLastMessageReceived(): Promise<void>;
+  markAsError(errorMessage: string): Promise<void>;
 }
 
 const BusinessWhatsAppAccountSchema = new Schema<IBusinessWhatsAppAccount>(
