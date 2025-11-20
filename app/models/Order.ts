@@ -51,6 +51,8 @@ export interface IOrder extends Document {
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'refunded' | 'cancelled';
   paymentMethod?: 'cash' | 'card' | 'online' | 'other';
+  paymentProviderId?: mongoose.Types.ObjectId; // Reference to PaymentProvider used
+  paymentLinkUrl?: string; // Payment link sent to customer
 
   // Source tracking
   source: 'whatsapp' | 'manual' | 'web' | 'phone';
@@ -193,6 +195,14 @@ const OrderSchema = new Schema<IOrder>(
     paymentMethod: {
       type: String,
       enum: ['cash', 'card', 'online', 'other'],
+    },
+    paymentProviderId: {
+      type: Schema.Types.ObjectId,
+      ref: 'PaymentProvider',
+    },
+    paymentLinkUrl: {
+      type: String,
+      trim: true,
     },
 
     // Source tracking

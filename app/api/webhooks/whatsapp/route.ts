@@ -11,6 +11,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import { IncomingMessage } from '@/models/IncomingMessage';
+import { BusinessWhatsAppAccount } from '@/models/BusinessWhatsAppAccount';
+import { ConversationFlowService } from '@/lib/services/ConversationFlowService';
+import mongoose from 'mongoose';
 
 // Webhook verify token - must match the one in Meta dashboard
 const WEBHOOK_VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN || 'your_verify_token_here';
@@ -151,8 +154,33 @@ async function handleIncomingMessages(value: any) {
       // Continue processing even if DB save fails
     }
 
-    // TODO: Trigger auto-reply or notification
-    // await processIncomingMessage(messageData);
+    // Process message through conversation flow
+    if (messageData.type === 'text' && messageData.text) {
+      try {
+        // Find business by phone number ID
+        const whatsappAccount = await BusinessWhatsAppAccount.findOne({
+          phoneNumberId: messageData.whatsappBusinessAccountId,
+        });
+
+        if (whatsappAccount) {
+          console.log('🤖 Processing message through conversation flow...');
+          
+          await ConversationFlowService.handleMessage(
+            whatsappAccount.businessId,
+            messageData.from,
+            messageData.text,
+            messageData.messageId
+          );
+          
+          console.log('✅ Conversation flow processed successfully');
+        } else {
+          console.log('⚠️  No business found for phone number ID:', messageData.whatsappBusinessAccountId);
+        }
+      } catch (flowError) {
+        console.error('❌ Conversation flow error:', flowError);
+        // Don't fail the webhook if conversation flow fails
+      }
+    }
 
     console.log('✅ Message processed successfully\n');
   }
