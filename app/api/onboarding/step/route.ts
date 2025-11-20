@@ -44,11 +44,11 @@ export async function PUT(request: NextRequest) {
         'category',
         'description',
         'settings',
-      ];
+      ] as const;
 
       allowedFields.forEach((field) => {
         if (data[field] !== undefined) {
-          business[field] = data[field];
+          (business as any)[field] = data[field];
         }
       });
     }
