@@ -109,7 +109,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Add to business's payment providers array
-    business.paymentProviders.addToSet(paymentProvider._id);
+    if (!business.paymentProviders.includes(paymentProvider._id as any)) {
+      business.paymentProviders.push(paymentProvider._id as any);
+    }
     await business.save();
 
     // Return without sensitive data
