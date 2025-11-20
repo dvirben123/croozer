@@ -1,21 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Business from '@/models/Business';
+import { getServerSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
 
-    // TODO: Get userId from session (Facebook OAuth)
-    // For now, we'll expect it in the request body
-    const { userId } = await request.json();
-
-    if (!userId) {
+    // CRITICAL: Get userId from session, not from client request
+    const session = await getServerSession(request);
+    if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: 'User ID is required' },
+        { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
+
+    const userId = session.user.id;
 
     // Check if user already has a business
     const existingBusiness = await Business.findOne({ userId });

@@ -322,15 +322,68 @@ export class PaymentService {
   /**
    * Verify payment webhook signature
    */
-  static verifyWebhookSignature(
+  static async verifyWebhookSignature(
     provider: string,
-    signature: string,
-    payload: string,
+    rawBody: string,
+    signature: string | null,
     secret: string
-  ): boolean {
-    // Implementation depends on provider
-    // Each provider has their own signature verification method
-    return true; // Simplified for now
+  ): Promise<boolean> {
+    if (!signature) {
+      return false;
+    }
+
+    try {
+      const crypto = require('crypto');
+
+      switch (provider) {
+        case 'stripe':
+          // Stripe uses HMAC SHA256 with timestamp
+          // Format: t=timestamp,v1=signature
+          const stripeElements = signature.split(',');
+          const timestamp = stripeElements.find(e => e.startsWith('t='))?.split('=')[1];
+          const stripeSignature = stripeElements.find(e => e.startsWith('v1='))?.split('=')[1];
+
+          if (!timestamp || !stripeSignature) {
+            return false;
+          }
+
+          const stripePayload = `${timestamp}.${rawBody}`;
+          const expectedSignature = crypto
+            .createHmac('sha256', secret)
+            .update(stripePayload, 'utf8')
+            .digest('hex');
+
+          return stripeSignature === expectedSignature;
+
+        case 'paypal':
+          // PayPal uses multiple headers for verification
+          // This is a simplified check - full implementation would verify all headers
+          const paypalHash = crypto
+            .createHmac('sha256', secret)
+            .update(rawBody, 'utf8')
+            .digest('base64');
+
+          return signature === paypalHash;
+
+        case 'tranzila':
+        case 'meshulam':
+        case 'cardcom':
+          // Israeli providers typically use simpler HMAC verification
+          const expectedHash = crypto
+            .createHmac('sha256', secret)
+            .update(rawBody, 'utf8')
+            .digest('hex');
+
+          return signature === expectedHash;
+
+        default:
+          console.warn(`Unknown provider for signature verification: ${provider}`);
+          return false;
+      }
+    } catch (error) {
+      console.error('Error verifying webhook signature:', error);
+      return false;
+    }
   }
 
   /**

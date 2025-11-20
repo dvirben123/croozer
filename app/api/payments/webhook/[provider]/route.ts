@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import { PaymentService } from '@/lib/services/PaymentService';
+import PaymentProvider from '@/models/PaymentProvider';
 
 export async function POST(
   request: NextRequest,
@@ -10,9 +11,36 @@ export async function POST(
     await dbConnect();
 
     const provider = params.provider;
-    const body = await request.json();
+
+    // CRITICAL: Get raw body for signature verification
+    const rawBody = await request.text();
+    let body: any;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Invalid JSON payload' },
+        { status: 400 }
+      );
+    }
 
     console.log(`💳 Payment webhook received from ${provider}:`, body);
+
+    // CRITICAL: Extract signature from headers based on provider
+    let signature: string | null = null;
+    switch (provider) {
+      case 'stripe':
+        signature = request.headers.get('stripe-signature');
+        break;
+      case 'paypal':
+        signature = request.headers.get('x-paypal-transmission-sig');
+        break;
+      case 'tranzila':
+      case 'meshulam':
+      case 'cardcom':
+        signature = request.headers.get('x-webhook-signature');
+        break;
+    }
 
     let orderId: string | null = null;
     let transactionId: string | null = null;
@@ -64,6 +92,39 @@ export async function POST(
         { status: 400 }
       );
     }
+
+    // CRITICAL: Verify webhook signature before processing payment
+    // Get the payment provider to retrieve webhook secret
+    const paymentProvider = await PaymentProvider.findOne({
+      provider,
+      isActive: true,
+    });
+
+    if (!paymentProvider) {
+      console.error(`No active payment provider found for ${provider}`);
+      return NextResponse.json(
+        { success: false, error: 'Payment provider not configured' },
+        { status: 400 }
+      );
+    }
+
+    // Verify webhook signature
+    const isValid = await PaymentService.verifyWebhookSignature(
+      provider,
+      rawBody,
+      signature,
+      paymentProvider.webhookSecret
+    );
+
+    if (!isValid) {
+      console.error(`Invalid webhook signature from ${provider}`);
+      return NextResponse.json(
+        { success: false, error: 'Invalid webhook signature' },
+        { status: 401 }
+      );
+    }
+
+    console.log(`✅ Webhook signature verified for ${provider}`);
 
     // Handle payment completion
     if (status === 'completed') {

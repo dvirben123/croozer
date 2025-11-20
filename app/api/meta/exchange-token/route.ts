@@ -4,10 +4,20 @@ import dbConnect from '@/lib/mongodb';
 import Business from '@/models/Business';
 import BusinessWhatsAppAccount from '@/models/BusinessWhatsAppAccount';
 import { EncryptionService } from '@/lib/services/EncryptionService';
+import { getServerSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
+
+    // CRITICAL: Verify authentication before any operations
+    const session = await getServerSession(request);
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     const { code, businessId } = await request.json();
 
@@ -15,6 +25,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Code and business ID are required' },
         { status: 400 }
+      );
+    }
+
+    // CRITICAL: Verify business ownership before allowing WhatsApp connection
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return NextResponse.json(
+        { success: false, error: 'Business not found' },
+        { status: 404 }
+      );
+    }
+
+    if (business.userId !== session.user.id) {
+      return NextResponse.json(
+        { success: false, error: 'Access denied' },
+        { status: 403 }
       );
     }
 
@@ -101,15 +127,6 @@ export async function POST(request: NextRequest) {
 
     const phoneNumber = phoneNumbers[0]; // Use first phone number
 
-    // Find business
-    const business = await Business.findById(businessId);
-    if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found' },
-        { status: 404 }
-      );
-    }
-
     // Encrypt access token
     const encryptedToken = EncryptionService.encrypt(accessToken);
 
@@ -162,7 +179,7 @@ export async function POST(request: NextRequest) {
       data: {
         whatsappAccountId: whatsappAccount._id,
         phoneNumber: phoneNumber.display_phone_number,
-        displayName: phoneNumber.verified_name,
+        displayName: phoneNumber.verified_name || business.name,
       },
       message: 'WhatsApp connected successfully',
     });

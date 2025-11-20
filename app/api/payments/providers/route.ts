@@ -56,6 +56,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate provider type
+    const allowedProviders = ['stripe', 'paypal', 'tranzila', 'meshulam', 'cardcom'];
+    if (!allowedProviders.includes(provider)) {
+      return NextResponse.json(
+        { success: false, error: `Invalid provider type. Allowed: ${allowedProviders.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Validate credentials is an object
+    if (typeof credentials !== 'object' || credentials === null || Array.isArray(credentials)) {
+      return NextResponse.json(
+        { success: false, error: 'Credentials must be an object' },
+        { status: 400 }
+      );
+    }
+
+    // CRITICAL: Verify business exists before creating provider
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return NextResponse.json(
+        { success: false, error: 'Business not found' },
+        { status: 404 }
+      );
+    }
+
     // Encrypt credentials
     const encryptedCredentials = EncryptionService.encrypt(JSON.stringify(credentials));
     
@@ -83,10 +109,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Add to business's payment providers array
-    await Business.findByIdAndUpdate(
-      businessId,
-      { $addToSet: { paymentProviders: paymentProvider._id } }
-    );
+    business.paymentProviders.addToSet(paymentProvider._id);
+    await business.save();
 
     // Return without sensitive data
     const { credentials: _, webhookSecret: __, ...safeProvider } = paymentProvider.toObject();

@@ -16,6 +16,14 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Validate stepNumber range
+    if (typeof stepNumber !== 'number' || stepNumber < 0 || stepNumber > 7) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid step number (must be 0-7)' },
+        { status: 400 }
+      );
+    }
+
     const business = await Business.findById(businessId);
 
     if (!business) {
@@ -25,9 +33,24 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Update business with step data
+    // CRITICAL: Whitelist allowed fields to prevent arbitrary business modifications
     if (data) {
-      Object.assign(business, data);
+      const allowedFields = [
+        'name',
+        'phone',
+        'email',
+        'address',
+        'businessHours',
+        'category',
+        'description',
+        'settings',
+      ];
+
+      allowedFields.forEach((field) => {
+        if (data[field] !== undefined) {
+          business[field] = data[field];
+        }
+      });
     }
 
     // Update onboarding progress
@@ -45,9 +68,15 @@ export async function PUT(request: NextRequest) {
 
     await business.save();
 
+    // Return only safe fields (avoid exposing sensitive data)
     return NextResponse.json({
       success: true,
-      data: business,
+      data: {
+        businessId: business._id,
+        onboarding: business.onboarding,
+        status: business.status,
+        name: business.name,
+      },
       message: 'Step progress saved successfully',
     });
   } catch (error: any) {

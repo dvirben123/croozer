@@ -71,9 +71,15 @@ export async function PUT(
       );
     }
 
+    // Build update object - only include isPrimary if explicitly set
+    const update: Record<string, any> = { ...updateData };
+    if (typeof isPrimary === 'boolean') {
+      update.isPrimary = isPrimary;
+    }
+
     const provider = await PaymentProvider.findOneAndUpdate(
       { _id: params.id, businessId },
-      { ...updateData, isPrimary },
+      update,
       { new: true, runValidators: true }
     );
 
