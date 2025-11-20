@@ -29,18 +29,22 @@ function OnboardingContent() {
     const initBusiness = async () => {
       if (!data.businessId) {
         try {
-          // TODO: Get userId from auth session
-          const userId = 'temp_user_id'; // Replace with actual user ID
-          
+          // Call API without userId - backend will get it from session
           const response = await fetch('/api/onboarding/start', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId }),
           });
 
           const result = await response.json();
+
           if (result.success && result.data) {
             updateData({ businessId: result.data._id });
+          } else {
+            // User is not authenticated, redirect to login
+            console.error('Failed to initialize business:', result.error);
+            if (result.error === 'Unauthorized') {
+              window.location.href = '/login';
+            }
           }
         } catch (error) {
           console.error('Failed to initialize business:', error);

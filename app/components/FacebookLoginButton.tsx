@@ -76,7 +76,7 @@ export default function FacebookLoginButton() {
   }, [statusChangeCallback]);
 
   // Handle Facebook login
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!window.FB) {
       console.error("Facebook SDK not loaded");
       return;
@@ -91,20 +91,19 @@ export default function FacebookLoginButton() {
     setIsLoading(true);
 
     // First check current status, then login if needed
-    window.FB.getLoginStatus((currentStatus) => {
+    window.FB.getLoginStatus(async (currentStatus) => {
       if (currentStatus.status === "connected") {
-        // Already logged in, just update status
-        statusChangeCallback(currentStatus);
-        setIsLoading(false);
+        // Already logged in, create backend session
+        await createBackendSession(currentStatus);
       } else {
         // Need to login
         window.FB.login(
-          (response) => {
-            statusChangeCallback(response);
-            setIsLoading(false);
-
-            if (response.status !== "connected") {
+          async (response) => {
+            if (response.status === "connected") {
+              await createBackendSession(response);
+            } else {
               console.log("User cancelled login or did not fully authorize.");
+              setIsLoading(false);
             }
           },
           {
@@ -115,18 +114,74 @@ export default function FacebookLoginButton() {
     });
   };
 
+  // Create backend session after Facebook login
+  const createBackendSession = async (response: FacebookLoginStatusResponse) => {
+    try {
+      if (!response.authResponse) {
+        throw new Error("No auth response from Facebook");
+      }
+
+      // Send Facebook token to backend to create session
+      const backendResponse = await fetch("/api/auth/facebook/callback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken: response.authResponse.accessToken,
+          userID: response.authResponse.userID,
+        }),
+      });
+
+      const result = await backendResponse.json();
+
+      if (result.success) {
+        console.log("✅ Backend session created successfully");
+        statusChangeCallback(response);
+
+        // Redirect to dashboard or refresh page
+        window.location.href = "/dashboard";
+      } else {
+        console.error("Failed to create backend session:", result.error);
+        alert("שגיאה בהתחברות. אנא נסה שוב.");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Error creating backend session:", error);
+      alert("שגיאה בהתחברות. אנא נסה שוב.");
+      setIsLoading(false);
+    }
+  };
+
   // Handle Facebook logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (!window.FB) return;
 
     setIsLoading(true);
 
-    window.FB.logout(() => {
-      setLoginStatus("unknown");
-      setUser(null);
+    try {
+      // First logout from Facebook
+      window.FB.logout(async () => {
+        // Then clear backend session
+        const response = await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (response.ok) {
+          setLoginStatus("unknown");
+          setUser(null);
+          console.log("✅ User logged out from Facebook and backend");
+
+          // Redirect to login page
+          window.location.href = "/login";
+        } else {
+          console.error("Failed to clear backend session");
+          setIsLoading(false);
+        }
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
       setIsLoading(false);
-      console.log("User logged out");
-    });
+    }
   };
 
   // Loading state while SDK initializes
