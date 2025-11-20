@@ -90,6 +90,12 @@ export default function FacebookLoginButton() {
 
     setIsLoading(true);
 
+    // Save current URL to redirect back after login (unless it's the login page)
+    const currentPath = window.location.pathname;
+    if (currentPath !== "/login") {
+      sessionStorage.setItem("redirectAfterLogin", currentPath);
+    }
+
     // First check current status, then login if needed
     window.FB.getLoginStatus((currentStatus) => {
       if (currentStatus.status === "connected") {
@@ -137,14 +143,12 @@ export default function FacebookLoginButton() {
         console.log("✅ Backend session created successfully");
         statusChangeCallback(response);
 
-        // Check if we're on the onboarding page - if so, just refresh
-        // Otherwise redirect to dashboard
-        const currentPath = window.location.pathname;
-        if (currentPath === "/onboarding") {
-          window.location.reload();
-        } else {
-          window.location.href = "/dashboard";
-        }
+        // Get saved redirect URL or default to dashboard
+        const redirectUrl = sessionStorage.getItem("redirectAfterLogin") || "/dashboard";
+        sessionStorage.removeItem("redirectAfterLogin");
+
+        // Redirect to the saved URL
+        window.location.href = redirectUrl;
       } else {
         console.error("Failed to create backend session:", result.error);
         alert("שגיאה בהתחברות. אנא נסה שוב.");
