@@ -76,7 +76,7 @@ export default function FacebookLoginButton() {
   }, [statusChangeCallback]);
 
   // Handle Facebook login
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (!window.FB) {
       console.error("Facebook SDK not loaded");
       return;
@@ -91,16 +91,16 @@ export default function FacebookLoginButton() {
     setIsLoading(true);
 
     // First check current status, then login if needed
-    window.FB.getLoginStatus(async (currentStatus) => {
+    window.FB.getLoginStatus((currentStatus) => {
       if (currentStatus.status === "connected") {
         // Already logged in, create backend session
-        await createBackendSession(currentStatus);
+        createBackendSession(currentStatus);
       } else {
         // Need to login
         window.FB.login(
-          async (response) => {
+          (response) => {
             if (response.status === "connected") {
-              await createBackendSession(response);
+              createBackendSession(response);
             } else {
               console.log("User cancelled login or did not fully authorize.");
               setIsLoading(false);
@@ -158,31 +158,36 @@ export default function FacebookLoginButton() {
   };
 
   // Handle Facebook logout
-  const handleLogout = async () => {
+  const handleLogout = () => {
     if (!window.FB) return;
 
     setIsLoading(true);
 
     try {
       // First logout from Facebook
-      window.FB.logout(async () => {
+      window.FB.logout(() => {
         // Then clear backend session
-        const response = await fetch("/api/auth/logout", {
+        fetch("/api/auth/logout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-        });
+        })
+          .then((response) => {
+            if (response.ok) {
+              setLoginStatus("unknown");
+              setUser(null);
+              console.log("✅ User logged out from Facebook and backend");
 
-        if (response.ok) {
-          setLoginStatus("unknown");
-          setUser(null);
-          console.log("✅ User logged out from Facebook and backend");
-
-          // Redirect to login page
-          window.location.href = "/login";
-        } else {
-          console.error("Failed to clear backend session");
-          setIsLoading(false);
-        }
+              // Redirect to login page
+              window.location.href = "/login";
+            } else {
+              console.error("Failed to clear backend session");
+              setIsLoading(false);
+            }
+          })
+          .catch((error) => {
+            console.error("Logout error:", error);
+            setIsLoading(false);
+          });
       });
     } catch (error) {
       console.error("Logout error:", error);
