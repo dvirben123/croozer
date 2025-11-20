@@ -91,8 +91,9 @@ export default function FacebookLoginButton() {
     setIsLoading(true);
 
     // Save current URL to redirect back after login (unless it's the login page)
+    // Only save if not already set to prevent overwriting redirects from other pages
     const currentPath = window.location.pathname;
-    if (currentPath !== "/login") {
+    if (currentPath !== "/login" && !sessionStorage.getItem("redirectAfterLogin")) {
       sessionStorage.setItem("redirectAfterLogin", currentPath);
     }
 

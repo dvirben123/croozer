@@ -43,7 +43,10 @@ function OnboardingContent() {
             // User is not authenticated, save current path and redirect to login
             console.error('Failed to initialize business:', result.error);
             if (result.error === 'Unauthorized') {
-              sessionStorage.setItem('redirectAfterLogin', '/onboarding');
+              // Only save redirect if not already set (prevent loops)
+              if (!sessionStorage.getItem('redirectAfterLogin')) {
+                sessionStorage.setItem('redirectAfterLogin', '/onboarding');
+              }
               window.location.href = '/login';
             }
           }
