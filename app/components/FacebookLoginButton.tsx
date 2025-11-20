@@ -137,8 +137,14 @@ export default function FacebookLoginButton() {
         console.log("✅ Backend session created successfully");
         statusChangeCallback(response);
 
-        // Redirect to dashboard or refresh page
-        window.location.href = "/dashboard";
+        // Check if we're on the onboarding page - if so, just refresh
+        // Otherwise redirect to dashboard
+        const currentPath = window.location.pathname;
+        if (currentPath === "/onboarding") {
+          window.location.reload();
+        } else {
+          window.location.href = "/dashboard";
+        }
       } else {
         console.error("Failed to create backend session:", result.error);
         alert("שגיאה בהתחברות. אנא נסה שוב.");
