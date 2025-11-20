@@ -87,9 +87,38 @@ export const useAuthGuard = (redirectTo: string = "/login") => {
         [getUserInfo, router, redirectTo]
     );
 
+    // Check for dev session first (development only)
+    const checkDevSession = useCallback(async () => {
+        if (process.env.NODE_ENV === 'development') {
+            try {
+                const response = await fetch('/api/auth/dev-session');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.user) {
+                        setAuthState({
+                            isLoading: false,
+                            isAuthenticated: true,
+                            user: data.user,
+                            loginStatus: "connected",
+                        });
+                        return true;
+                    }
+                }
+            } catch (error) {
+                // No dev session, continue to Facebook check
+            }
+        }
+        return false;
+    }, []);
+
     // Check authentication status
     useEffect(() => {
-        const checkAuthStatus = () => {
+        const checkAuthStatus = async () => {
+            // Check dev session first (dev mode only)
+            const hasDevSession = await checkDevSession();
+            if (hasDevSession) return;
+
+            // Check Facebook auth
             if (window.FB && typeof window.FB.getLoginStatus === "function") {
                 // Check login status
                 window.FB.getLoginStatus((response: FacebookLoginStatusResponse) => {
@@ -102,7 +131,7 @@ export const useAuthGuard = (redirectTo: string = "/login") => {
         };
 
         checkAuthStatus();
-    }, [statusChangeCallback]);
+    }, [statusChangeCallback, checkDevSession]);
 
     // Logout function
     const logout = useCallback(() => {

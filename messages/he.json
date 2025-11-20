@@ -1,0 +1,208 @@
+{
+  "onboarding": {
+    "title": "הגדרת העסק שלך",
+    "subtitle": "בואו נגדיר את העסק שלך ב-7 שלבים פשוטים",
+    "steps": {
+      "businessDetails": "פרטי העסק",
+      "category": "קטגוריה",
+      "menu": "תפריט",
+      "whatsapp": "וואטסאפ",
+      "payment": "תשלומים",
+      "messages": "הודעות",
+      "complete": "סיום"
+    },
+    "businessDetails": {
+      "title": "פרטי העסק",
+      "description": "בואו נתחיל עם הפרטים הבסיסיים של העסק שלכם",
+      "nameLabel": "שם העסק",
+      "namePlaceholder": "לדוגמה: פיצה פלוס",
+      "nameRequired": "שם העסק הוא שדה חובה",
+      "phoneLabel": "מספר טלפון",
+      "phonePlaceholder": "050-1234567",
+      "phoneRequired": "מספר טלפון הוא שדה חובה",
+      "phoneInvalid": "מספר טלפון לא תקין",
+      "emailLabel": "כתובת אימייל",
+      "emailPlaceholder": "info@mybusiness.com",
+      "emailRequired": "כתובת אימייל היא שדה חובה",
+      "emailInvalid": "כתובת אימייל לא תקינה",
+      "addressTitle": "כתובת העסק",
+      "streetLabel": "רחוב",
+      "streetPlaceholder": "רחוב הרצל 1",
+      "cityLabel": "עיר",
+      "cityPlaceholder": "תל אביב",
+      "countryLabel": "מדינה",
+      "countryPlaceholder": "ישראל",
+      "postalCodeLabel": "מיקוד",
+      "postalCodePlaceholder": "1234567",
+      "continue": "המשך",
+      "saving": "שומר..."
+    },
+    "category": {
+      "title": "בחר את סוג העסק",
+      "description": "זה יעזור לנו להתאים את המערכת לצרכים הספציפיים שלך",
+      "restaurant": {
+        "title": "מסעדה",
+        "description": "מסעדה עם תפריט מלא, ישיבה במקום ושירות מלצרים",
+        "features": {
+          "menu": "תפריט מורחב",
+          "tables": "ניהול שולחנות",
+          "orders": "הזמנות מורכבות"
+        }
+      },
+      "fastFood": {
+        "title": "מזון מהיר",
+        "description": "פיצריה, המבורגרים, שווארמה או עסק אחר למזון מהיר",
+        "features": {
+          "menu": "תפריט פשוט",
+          "orders": "הזמנות מהירות",
+          "delivery": "משלוחים"
+        }
+      },
+      "back": "חזור",
+      "continue": "המשך"
+    },
+    "menu": {
+      "title": "בניית התפריט",
+      "description": "הוסף מוצרים לתפריט שלך. לקוחות יוכלו להזמין מוצרים אלו דרך וואטסאפ",
+      "empty": {
+        "title": "התפריט שלך ריק",
+        "description": "התחל להוסיף מוצרים כדי שלקוחות יוכלו להזמין",
+        "addFirst": "הוסף מוצר ראשון"
+      },
+      "productsCount": "{count} מוצרים בתפריט",
+      "addProduct": "הוסף מוצר",
+      "loading": "טוען מוצרים...",
+      "back": "חזור",
+      "continue": "המשך",
+      "skipForNow": "דלג לעכשיו"
+    },
+    "whatsapp": {
+      "title": "חיבור וואטסאפ",
+      "description": "חבר את חשבון הוואטסאפ עסקי שלך כדי להתחיל לקבל הזמנות",
+      "connected": {
+        "title": "וואטסאפ מחובר בהצלחה!",
+        "description": "חשבון הוואטסאפ העסקי שלך מחובר ומוכן לשימוש"
+      },
+      "requirements": {
+        "title": "מה תצטרך:",
+        "phoneNumber": "מספר טלפון שאינו רשום בוואטסאפ",
+        "facebookAccount": "חשבון פייסבוק עסקי (או אישי)",
+        "phoneAccess": "גישה למספר הטלפון לאימות"
+      },
+      "connectButton": "חבר וואטסאפ עסקי",
+      "connecting": "מתחבר...",
+      "redirectNote": "תועבר לעמוד האימות של מטא",
+      "tip": "טיפ: אם אין לך מספר טלפון זמין, תוכל לדלג על שלב זה ולחבר אותו מאוחר יותר מהגדרות המערכת.",
+      "back": "חזור",
+      "continue": "המשך",
+      "skipForNow": "דלג לעכשיו"
+    },
+    "payment": {
+      "title": "הגדרת תשלומים",
+      "description": "חבר אמצעי תשלום כדי לקבל תשלומים מלקוחות",
+      "empty": {
+        "title": "לא הוגדרו אמצעי תשלום",
+        "description": "הוסף לפחות אמצעי תשלום אחד כדי לקבל תשלומים מלקוחות"
+      },
+      "providers": {
+        "stripe": {
+          "name": "Stripe",
+          "description": "תשלומים בינלאומיים"
+        },
+        "paypal": {
+          "name": "PayPal",
+          "description": "תשלומים מאובטחים"
+        },
+        "tranzila": {
+          "name": "Tranzila",
+          "description": "ספק תשלומים ישראלי"
+        },
+        "meshulam": {
+          "name": "Meshulam",
+          "description": "ספק תשלומים ישראלי"
+        }
+      },
+      "connected": "{count} אמצעי תשלום מחוברים",
+      "addProvider": "הוסף אמצעי תשלום",
+      "addMore": "הוסף עוד",
+      "testMode": "מצב בדיקה",
+      "active": "פעיל",
+      "default": "ברירת מחדל",
+      "loading": "טוען אמצעי תשלום...",
+      "tip": "טיפ: תוכל להוסיף ולנהל אמצעי תשלום נוספים בכל עת מהגדרות המערכת.",
+      "back": "חזור",
+      "continue": "המשך",
+      "skipForNow": "דלג לעכשיו"
+    },
+    "conversation": {
+      "title": "הגדרת שיחה אוטומטית",
+      "description": "התאם את ההודעות שהלקוחות יקבלו בוואטסאפ",
+      "welcomeLabel": "הודעת ברוכים הבאים",
+      "welcomePlaceholder": "הקלד את ההודעה שהלקוחות יקבלו כשהם פונים אליך לראשונה...",
+      "welcomeHelp": "הודעה זו תישלח ללקוחות כשהם יפנו אליך לראשונה בוואטסאפ",
+      "previewTitle": "תצוגה מקדימה:",
+      "flowTitle": "זרימת השיחה האוטומטית:",
+      "flowSteps": {
+        "1": "הלקוח שולח הודעה ראשונה",
+        "2": "המערכת שולחת הודעת ברוכים הבאים",
+        "3": "הצגת קטגוריות התפריט",
+        "4": "הלקוח בוחר מוצרים",
+        "5": "הלקוח מאשר הזמנה",
+        "6": "שליחת קישור לתשלום",
+        "7": "אישור הזמנה לאחר תשלום"
+      },
+      "back": "חזור",
+      "continue": "המשך"
+    },
+    "completion": {
+      "title": "כל הכבוד! ההגדרה הושלמה",
+      "description": "העסק שלך מוכן לקבל הזמנות דרך וואטסאפ",
+      "summaryTitle": "סיכום ההגדרה:",
+      "businessName": "שם העסק",
+      "category": "קטגוריה",
+      "productsCount": "מוצרים בתפריט",
+      "whatsapp": "וואטסאפ",
+      "paymentMethods": "אמצעי תשלום",
+      "connected": "מחובר",
+      "notConnected": "לא מחובר",
+      "notConfigured": "לא הוגדרו",
+      "categoryRestaurant": "מסעדה",
+      "categoryFastFood": "מזון מהיר",
+      "nextStepsTitle": "השלבים הבאים:",
+      "nextSteps": {
+        "connectWhatsApp": {
+          "title": "חבר חשבון וואטסאפ",
+          "description": "כדי לקבל הזמנות, תצטרך לחבר חשבון וואטסאפ עסקי"
+        },
+        "addProducts": {
+          "title": "הוסף מוצרים לתפריט",
+          "description": "הוסף את המוצרים שלך כדי שלקוחות יוכלו להזמין"
+        },
+        "startReceiving": {
+          "title": "התחל לקבל הזמנות!",
+          "description": "שתף את מספר הוואטסאפ שלך עם לקוחות והתחל לקבל הזמנות"
+        }
+      },
+      "goToDashboard": "עבור ללוח הבקרה"
+    }
+  },
+  "common": {
+    "loading": "טוען...",
+    "saving": "שומר...",
+    "saved": "נשמר",
+    "error": "שגיאה",
+    "success": "הצלחה",
+    "cancel": "ביטול",
+    "confirm": "אישור",
+    "delete": "מחק",
+    "edit": "ערוך",
+    "save": "שמור",
+    "back": "חזור",
+    "next": "הבא",
+    "continue": "המשך",
+    "skip": "דלג",
+    "done": "סיום",
+    "close": "סגור"
+  }
+}
+

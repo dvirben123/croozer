@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import FacebookLoginButton from "@/components/FacebookLoginButton";
+import DevLoginButton from "@/components/DevLoginButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -67,6 +68,11 @@ export default function LoginPage() {
             </p>
           </div>
         </div>
+
+        {/* Development Login (only in dev mode) */}
+        {process.env.NODE_ENV === 'development' && (
+          <DevLoginButton />
+        )}
 
         {/* Login Card */}
         <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">

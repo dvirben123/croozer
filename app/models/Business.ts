@@ -4,6 +4,7 @@ export interface IBusiness extends Document {
   userId: string; // Facebook user ID (owner)
   name: string;
   type: 'restaurant' | 'pizzeria' | 'retail' | 'service' | 'other';
+  category?: 'restaurant' | 'fast_food'; // Business category for menu structure
   phone: string;
   email: string;
   address?: {
@@ -21,6 +22,7 @@ export interface IBusiness extends Document {
     };
   };
   whatsappAccountId?: mongoose.Types.ObjectId;
+  paymentProviders: mongoose.Types.ObjectId[]; // References to PaymentProvider
   status: 'active' | 'suspended' | 'trial' | 'pending_setup';
   subscription: {
     plan: 'free' | 'basic' | 'pro' | 'enterprise';
@@ -42,7 +44,6 @@ const BusinessSchema = new Schema<IBusiness>(
     userId: {
       type: String,
       required: [true, 'User ID is required'],
-      index: true,
     },
     name: {
       type: String,
@@ -54,6 +55,11 @@ const BusinessSchema = new Schema<IBusiness>(
       type: String,
       enum: ['restaurant', 'pizzeria', 'retail', 'service', 'other'],
       required: [true, 'Business type is required'],
+    },
+    category: {
+      type: String,
+      enum: ['restaurant', 'fast_food'],
+      index: true,
     },
     phone: {
       type: String,
@@ -100,11 +106,15 @@ const BusinessSchema = new Schema<IBusiness>(
       type: Schema.Types.ObjectId,
       ref: 'BusinessWhatsAppAccount',
     },
+    paymentProviders: {
+      type: [Schema.Types.ObjectId],
+      ref: 'PaymentProvider',
+      default: [],
+    },
     status: {
       type: String,
       enum: ['active', 'suspended', 'trial', 'pending_setup'],
       default: 'pending_setup',
-      index: true,
     },
     subscription: {
       plan: {

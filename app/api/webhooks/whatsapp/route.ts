@@ -11,6 +11,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import { IncomingMessage } from '@/models/IncomingMessage';
+import BusinessWhatsAppAccount from '@/models/BusinessWhatsAppAccount';
+import { ConversationFlowService } from '@/lib/services/ConversationFlowService';
+import mongoose from 'mongoose';
 
 // Webhook verify token - must match the one in Meta dashboard
 const WEBHOOK_VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN || 'your_verify_token_here';
@@ -21,7 +24,7 @@ const WEBHOOK_VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN || 'your_verify_to
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  
+
   const mode = searchParams.get('hub.mode');
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
@@ -100,14 +103,14 @@ async function handleIncomingMessages(value: any) {
       // Message identifiers
       messageId: message.id,
       whatsappBusinessAccountId: metadata.phone_number_id,
-      
+
       // Sender information
       from: message.from,
-      
+
       // Message content
       type: message.type,
       timestamp: new Date(parseInt(message.timestamp) * 1000),
-      
+
       // Message body based on type
       text: message.text?.body,
       image: message.image,
@@ -116,7 +119,7 @@ async function handleIncomingMessages(value: any) {
       document: message.document,
       location: message.location,
       contacts: message.contacts,
-      
+
       // Context (if it's a reply)
       context: message.context,
     };
@@ -133,7 +136,7 @@ async function handleIncomingMessages(value: any) {
     // Save to database
     try {
       await dbConnect();
-      
+
       await IncomingMessage.create({
         messageId: messageData.messageId,
         whatsappBusinessAccountId: messageData.whatsappBusinessAccountId,
@@ -144,15 +147,40 @@ async function handleIncomingMessages(value: any) {
         context: messageData.context,
         processed: false,
       });
-      
+
       console.log('💾 Message saved to database');
     } catch (dbError) {
       console.error('❌ Failed to save to database:', dbError);
       // Continue processing even if DB save fails
     }
 
-    // TODO: Trigger auto-reply or notification
-    // await processIncomingMessage(messageData);
+    // Process message through conversation flow
+    if (messageData.type === 'text' && messageData.text) {
+      try {
+        // Find business by phone number ID
+        const whatsappAccount = await BusinessWhatsAppAccount.findOne({
+          phoneNumberId: messageData.whatsappBusinessAccountId,
+        });
+
+        if (whatsappAccount) {
+          console.log('🤖 Processing message through conversation flow...');
+
+          await ConversationFlowService.handleMessage(
+            whatsappAccount.businessId,
+            messageData.from,
+            messageData.text,
+            messageData.messageId
+          );
+
+          console.log('✅ Conversation flow processed successfully');
+        } else {
+          console.log('⚠️  No business found for phone number ID:', messageData.whatsappBusinessAccountId);
+        }
+      } catch (flowError) {
+        console.error('❌ Conversation flow error:', flowError);
+        // Don't fail the webhook if conversation flow fails
+      }
+    }
 
     console.log('✅ Message processed successfully\n');
   }
