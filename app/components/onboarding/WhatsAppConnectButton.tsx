@@ -95,7 +95,7 @@ export default function WhatsAppConnectButton({
             },
           },
         },
-      }
+      } as any
     );
   };
 

@@ -217,3 +217,4 @@ If none of the above works, provide:
 - `app/layout.tsx` (Facebook SDK initialization)
 - `app/api/meta/exchange-token/route.ts`
 
+

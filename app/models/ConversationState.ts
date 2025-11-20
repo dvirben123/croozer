@@ -147,7 +147,7 @@ ConversationStateSchema.methods.clearCart = function (): void {
 };
 
 ConversationStateSchema.methods.calculateTotal = function (): number {
-  return this.cart.reduce((total, item) => total + item.subtotal, 0);
+  return this.cart.reduce((total: number, item: IOrderItem) => total + item.subtotal, 0);
 };
 
 ConversationStateSchema.methods.moveToStep = async function (step: ConversationStep): Promise<void> {

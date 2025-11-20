@@ -382,3 +382,4 @@ export default function MyStep() {
 **Status**: BusinessDetailsStep migrated ✅  
 **Next**: Update remaining form-based steps following this pattern
 
+

@@ -22,17 +22,30 @@ export class ConversationFlowService {
       const customer = await this.findOrCreateCustomer(businessId, customerPhone);
 
       // Find or create conversation state
-      const conversation = await ConversationState.findOrCreate(
+      let conversation = await ConversationState.findOne({
         businessId,
-        customer._id,
-        customerPhone
-      );
+        customerId: customer._id,
+        phoneNumber: customerPhone,
+      });
+
+      if (!conversation) {
+        conversation = await ConversationState.create({
+          businessId,
+          customerId: customer._id,
+          phoneNumber: customerPhone,
+          currentStep: 'welcome',
+          cart: [],
+          lastMessageAt: new Date(),
+          context: {},
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        });
+      }
 
       // Process message based on current step
       await this.processMessageByStep(
         conversation,
         businessId,
-        customer._id,
+        customer._id as mongoose.Types.ObjectId,
         customerPhone,
         messageText,
         messageId
@@ -118,7 +131,11 @@ export class ConversationFlowService {
     customerPhone: string
   ): Promise<void> {
     // Get welcome message template
-    const template = await MessageTemplate.findActiveByType(businessId, 'welcome');
+    const template = await MessageTemplate.findOne({
+      businessId,
+      type: 'welcome',
+      approved: true,
+    });
     
     let welcomeMessage = 'שלום! ברוכים הבאים 👋\n\nאיך נוכל לעזור לך היום?';
     
@@ -364,6 +381,14 @@ export class ConversationFlowService {
     }
 
     const variantIndex = conversation.context.currentVariantIndex || 0;
+    
+    if (!product.variants || product.variants.length === 0) {
+      // No variants, add directly to cart
+      await this.addToCart(conversation, product, []);
+      await this.showCartSummary(conversation, businessId, customerPhone);
+      return;
+    }
+    
     const variant = product.variants[variantIndex];
     const optionNumber = parseInt(messageText.trim());
 
@@ -541,7 +566,7 @@ export class ConversationFlowService {
       const { PaymentService } = await import('./PaymentService');
       
       const paymentResult = await PaymentService.createPaymentLink(businessId, {
-        orderId: order._id.toString(),
+        orderId: (order._id as any).toString(),
         amount: total,
         currency: 'ILS',
         customerPhone,

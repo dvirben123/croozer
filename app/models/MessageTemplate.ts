@@ -230,7 +230,7 @@ MessageTemplateSchema.statics.createDefault = async function (
     },
   ];
   
-  return this.insertMany(defaultTemplates);
+  return this.insertMany(defaultTemplates as any) as any;
 };
 
 // Prevent model overwrite

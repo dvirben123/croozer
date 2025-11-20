@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import dbConnect from '@/lib/mongodb';
 import PaymentProvider from '@/models/PaymentProvider';
 import Business from '@/models/Business';
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
     const encryptedCredentials = EncryptionService.encrypt(JSON.stringify(credentials));
     
     // Generate webhook secret
-    const webhookSecret = EncryptionService.generateRandomKey(32);
+    const webhookSecret = crypto.randomBytes(32).toString('hex');
 
     // If this is set as primary, unset other primary providers
     if (isPrimary) {

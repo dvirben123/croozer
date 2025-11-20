@@ -28,7 +28,11 @@ export class PaymentService {
   ): Promise<PaymentLinkResponse> {
     try {
       // Get primary payment provider for business
-      const provider = await PaymentProvider.findPrimaryProvider(businessId);
+      const provider = await PaymentProvider.findOne({
+        businessId,
+        isActive: true,
+        isPrimary: true,
+      });
 
       if (!provider) {
         return {

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import dbConnect from '@/lib/mongodb';
 import Business from '@/models/Business';
-import { BusinessWhatsAppAccount } from '@/models/BusinessWhatsAppAccount';
+import BusinessWhatsAppAccount from '@/models/BusinessWhatsAppAccount';
 import { EncryptionService } from '@/lib/services/EncryptionService';
 
 export async function POST(request: NextRequest) {
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
         displayName: phoneNumber.verified_name || business.name,
         accessToken: encryptedToken,
         tokenType: 'permanent',
-        webhookVerifyToken: EncryptionService.generateRandomKey(32),
+        webhookVerifyToken: crypto.randomBytes(32).toString('hex'),
         webhookSubscribed: false,
         status: 'active',
         connectedAt: new Date(),
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update business with WhatsApp account reference
-    business.whatsappAccountId = whatsappAccount._id;
+    business.whatsappAccountId = whatsappAccount._id as any;
     await business.save();
 
     // Subscribe to webhooks
