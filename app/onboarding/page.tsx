@@ -40,9 +40,10 @@ function OnboardingContent() {
           if (result.success && result.data) {
             updateData({ businessId: result.data._id });
           } else {
-            // User is not authenticated, redirect to login
+            // User is not authenticated, save current path and redirect to login
             console.error('Failed to initialize business:', result.error);
             if (result.error === 'Unauthorized') {
+              sessionStorage.setItem('redirectAfterLogin', '/onboarding');
               window.location.href = '/login';
             }
           }

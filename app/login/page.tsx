@@ -13,10 +13,12 @@ export default function LoginPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthGuard();
 
-  // Redirect to dashboard if already logged in
+  // Redirect to saved URL or dashboard if already logged in
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      router.push("/dashboard");
+      const redirectUrl = sessionStorage.getItem("redirectAfterLogin") || "/dashboard";
+      sessionStorage.removeItem("redirectAfterLogin");
+      router.push(redirectUrl);
     }
   }, [isAuthenticated, isLoading, router]);
 
