@@ -1,119 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import type { FacebookLoginStatusResponse, FacebookUser } from "@/types/facebook";
-
-interface AuthState {
-    isLoading: boolean;
-    isAuthenticated: boolean;
-    user: FacebookUser | null;
-    loginStatus: "loading" | "connected" | "not_authorized" | "unknown";
-}
+import { authClient } from "@/lib/auth-client";
 
 export const useAuth = () => {
-    const [authState, setAuthState] = useState<AuthState>({
-        isLoading: true,
-        isAuthenticated: false,
-        user: null,
-        loginStatus: "loading",
-    });
+    const { data: session, isPending } = authClient.useSession();
 
-    // Get user info from Facebook API
-    const getUserInfo = useCallback(() => {
-        if (!window.FB) return;
-
-        window.FB.api(
-            "/me",
-            { fields: "name,email,picture" },
-            (response: FacebookUser) => {
-                if (response && !response.error) {
-                    setAuthState((prev) => ({
-                        ...prev,
-                        user: response,
-                        isAuthenticated: true,
-                        isLoading: false,
-                    }));
-                } else {
-                    console.error("Error fetching user info:", response);
-                    setAuthState((prev) => ({
-                        ...prev,
-                        user: null,
-                        isAuthenticated: false,
-                        isLoading: false,
-                    }));
-                }
-            }
-        );
-    }, []);
-
-    // Status change callback (no redirect for optional auth)
-    const statusChangeCallback = useCallback(
-        (response: FacebookLoginStatusResponse) => {
-            console.log("Auth - Facebook Login Status:", response);
-
-            if (response.status === "connected") {
-                // User is logged into Facebook and has authorized your app
-                setAuthState((prev) => ({
-                    ...prev,
-                    loginStatus: "connected",
-                    isAuthenticated: true,
-                }));
-                getUserInfo();
-            } else if (response.status === "not_authorized") {
-                // User is logged into Facebook but has not authorized your app
-                setAuthState({
-                    isLoading: false,
-                    isAuthenticated: false,
-                    user: null,
-                    loginStatus: "not_authorized",
-                });
-            } else {
-                // User is not logged into Facebook
-                setAuthState({
-                    isLoading: false,
-                    isAuthenticated: false,
-                    user: null,
-                    loginStatus: "unknown",
-                });
-            }
-        },
-        [getUserInfo]
-    );
-
-    // Check authentication status
-    useEffect(() => {
-        const checkAuthStatus = () => {
-            if (window.FB && typeof window.FB.getLoginStatus === "function") {
-                // Check login status
-                window.FB.getLoginStatus((response: FacebookLoginStatusResponse) => {
-                    statusChangeCallback(response);
-                });
-            } else {
-                // SDK not ready yet, check again
-                setTimeout(checkAuthStatus, 100);
-            }
-        };
-
-        checkAuthStatus();
-    }, [statusChangeCallback]);
-
-    // Logout function
-    const logout = useCallback(() => {
-        if (!window.FB) return;
-
-        window.FB.logout(() => {
-            setAuthState({
-                isLoading: false,
-                isAuthenticated: false,
-                user: null,
-                loginStatus: "unknown",
-            });
-            console.log("User logged out");
-        });
-    }, []);
+    const logout = async () => {
+        await authClient.signOut();
+        window.location.href = "/login";
+    };
 
     return {
-        ...authState,
+        isLoading: isPending,
+        isAuthenticated: !!session,
+        user: session?.user || null,
         logout,
     };
 };

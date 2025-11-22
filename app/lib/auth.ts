@@ -1,44 +1,37 @@
 import { NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
+import { auth } from '../../auth';
 
 export interface SessionUser {
   id: string;
   name: string;
   email: string;
-  picture?: {
-    data: {
-      url: string;
-    };
-  };
+  image?: string;
 }
 
 export interface Session {
   user: SessionUser;
-  isDev?: boolean;
+  session: any;
 }
 
 /**
- * Get the current session from cookies
- * Supports both development and production sessions
+ * Get the current session using Better Auth
  */
 export async function getServerSession(request: NextRequest): Promise<Session | null> {
   try {
-    const cookieStore = await cookies();
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
 
-    // Check for dev session first (development only)
-    if (process.env.NODE_ENV === 'development') {
-      const devSessionCookie = cookieStore.get('dev_session');
-      if (devSessionCookie) {
-        const user = JSON.parse(devSessionCookie.value);
-        return { user, isDev: true };
-      }
-    }
-
-    // Check for production session (Facebook OAuth)
-    const sessionCookie = cookieStore.get('session');
-    if (sessionCookie) {
-      const user = JSON.parse(sessionCookie.value);
-      return { user };
+    if (session?.user) {
+      return {
+        user: {
+          id: session.user.id,
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image || undefined,
+        },
+        session: session.session,
+      };
     }
 
     return null;

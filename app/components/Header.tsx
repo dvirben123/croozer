@@ -61,7 +61,7 @@ export function Header({ onOpenContactDialog }: HeaderProps) {
             {isAuthenticated && user && (
               <div className="sm:hidden flex items-center gap-2">
                 <img
-                  src={user.picture?.data?.url}
+                  src={user.image || undefined}
                   alt={user.name}
                   className="w-8 h-8 rounded-full"
                 />

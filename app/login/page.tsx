@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { authClient } from "@/lib/auth-client";
 import FacebookLoginButton from "@/components/FacebookLoginButton";
 import DevLoginButton from "@/components/DevLoginButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,16 +11,19 @@ import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuthGuard();
+  const { data: session, isPending } = authClient.useSession();
 
   // Redirect to saved URL or dashboard if already logged in
   useEffect(() => {
-    if (isAuthenticated && !isLoading) {
+    if (session && !isPending) {
       const redirectUrl = sessionStorage.getItem("redirectAfterLogin") || "/dashboard";
       sessionStorage.removeItem("redirectAfterLogin");
       router.push(redirectUrl);
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [session, isPending, router]);
+
+  const isAuthenticated = !!session;
+  const isLoading = isPending;
 
   // Show loading state while checking authentication
   if (isLoading) {

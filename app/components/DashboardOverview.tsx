@@ -299,7 +299,7 @@ export default function DashboardOverview() {
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <img
-                    src={user.picture?.data?.url}
+                    src={user.image || undefined}
                     alt={user.name}
                     className="w-12 h-12 rounded-full ring-2 ring-blue-500/20"
                   />

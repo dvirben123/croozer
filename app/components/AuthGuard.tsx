@@ -15,11 +15,11 @@ export default function AuthGuard({
   redirectTo = "/login",
   fallback,
 }: AuthGuardProps) {
-  const { isLoading, isAuthenticated, user, loginStatus } =
+  const { isLoading, isAuthenticated, user } =
     useAuthGuard(redirectTo);
 
   // Show loading state while checking authentication
-  if (isLoading || loginStatus === "loading") {
+  if (isLoading) {
     return (
       fallback || (
         <div

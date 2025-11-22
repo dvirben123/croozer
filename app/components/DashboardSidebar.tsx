@@ -4,7 +4,7 @@ import { BarChart3, MessageCircle, User, Settings, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Separator } from "./ui/separator";
-import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useAuth } from "@/hooks/useAuth";
 
 type TabType = "overview" | "messages" | "profile" | "settings";
 
@@ -17,7 +17,7 @@ export default function DashboardSidebar({
   activeTab,
   onTabChange,
 }: DashboardSidebarProps) {
-  const { user, logout, isLoading } = useAuthGuard();
+  const { user, logout, isLoading } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -63,7 +63,7 @@ export default function DashboardSidebar({
           </div>
           <Avatar className="h-10 w-10">
             <AvatarImage
-              src={user?.picture?.data?.url}
+              src={user?.image || undefined}
               alt={user?.name || "User"}
             />
             <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>

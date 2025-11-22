@@ -103,7 +103,7 @@ export default function ProfileTab() {
                 <div className="flex flex-col items-center space-y-4">
                   <Avatar className="h-24 w-24 ring-2 ring-blue-500/20">
                     <AvatarImage
-                      src={user?.picture?.data?.url}
+                      src={user?.image || undefined}
                       alt={user?.name || "Profile"}
                     />
                     <AvatarFallback className="text-xl bg-blue-100 text-blue-600">

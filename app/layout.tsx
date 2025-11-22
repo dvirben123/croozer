@@ -36,7 +36,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const facebookAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "";
   const messages = await getMessages();
 
   return (
@@ -48,33 +47,6 @@ export default async function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
-        {facebookAppId && (
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                window.fbAsyncInit = function() {
-                  FB.init({
-                    appId      : '${facebookAppId}',
-                    cookie     : true,
-                    xfbml      : true,
-                    version    : 'v18.0'
-                  });
-                    
-                  FB.AppEvents.logPageView();   
-                    
-                };
-
-                (function(d, s, id){
-                   var js, fjs = d.getElementsByTagName(s)[0];
-                   if (d.getElementById(id)) {return;}
-                   js = d.createElement(s); js.id = id;
-                   js.src = "https://connect.facebook.net/en_US/sdk.js";
-                   fjs.parentNode.insertBefore(js, fjs);
-                 }(document, 'script', 'facebook-jssdk'));
-              `,
-            }}
-          />
-        )}
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <NextIntlClientProvider messages={messages} locale="he">
