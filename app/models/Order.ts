@@ -113,8 +113,6 @@ const OrderSchema = new Schema<IOrder>(
     orderNumber: {
       type: String,
       required: [true, 'Order number is required'],
-      unique: true,
-      index: true,
     },
     items: [
       {
@@ -214,7 +212,6 @@ const OrderSchema = new Schema<IOrder>(
     },
     whatsappMessageId: {
       type: String,
-      index: true,
     },
     whatsappConversationId: {
       type: String,

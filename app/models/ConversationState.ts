@@ -110,7 +110,6 @@ const ConversationStateSchema = new Schema<IConversationState>(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
     },
   },
   {

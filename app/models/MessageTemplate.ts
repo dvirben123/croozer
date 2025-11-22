@@ -66,9 +66,8 @@ const MessageTemplateSchema = new Schema<IMessageTemplate>(
       type: Schema.Types.ObjectId,
       ref: 'Business',
       required: [true, 'Business ID is required'],
-      index: true,
     },
-    
+
     name: {
       type: String,
       required: [true, 'Template name is required'],
@@ -79,7 +78,6 @@ const MessageTemplateSchema = new Schema<IMessageTemplate>(
       type: String,
       enum: ['welcome', 'menu_presentation', 'order_confirmation', 'payment_reminder', 'order_status_update', 'custom'],
       required: [true, 'Template type is required'],
-      index: true,
     },
     
     content: {
@@ -100,18 +98,15 @@ const MessageTemplateSchema = new Schema<IMessageTemplate>(
     templateId: {
       type: String,
       sparse: true,
-      index: true,
     },
     approved: {
       type: Boolean,
       default: false,
-      index: true,
     },
     approvalStatus: {
       type: String,
       enum: ['pending', 'approved', 'rejected', 'not_submitted'],
       default: 'not_submitted',
-      index: true,
     },
     rejectionReason: {
       type: String,
@@ -146,7 +141,6 @@ const MessageTemplateSchema = new Schema<IMessageTemplate>(
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
     },
   },
   {

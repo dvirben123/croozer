@@ -54,27 +54,20 @@ const BusinessWhatsAppAccountSchema = new Schema<IBusinessWhatsAppAccount>(
       type: Schema.Types.ObjectId,
       ref: 'Business',
       required: [true, 'Business ID is required'],
-      unique: true,
-      index: true,
     },
     userId: {
       type: String,
       required: [true, 'User ID is required'],
-      index: true,
     },
 
     // WhatsApp Business Account details
     whatsappBusinessAccountId: {
       type: String,
       required: [true, 'WhatsApp Business Account ID is required'],
-      unique: true,
-      index: true,
     },
     phoneNumberId: {
       type: String,
       required: [true, 'Phone Number ID is required'],
-      unique: true,
-      index: true,
     },
     phoneNumber: {
       type: String,
@@ -138,7 +131,6 @@ const BusinessWhatsAppAccountSchema = new Schema<IBusinessWhatsAppAccount>(
       type: String,
       enum: ['pending', 'active', 'suspended', 'disconnected', 'error'],
       default: 'pending',
-      index: true,
     },
     lastHealthCheck: {
       type: Date,

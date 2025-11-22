@@ -1,25 +1,17 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
-const withNextIntl = createNextIntlPlugin('./i18n.ts');
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 const nextConfig: NextConfig = {
-  // Ignore ESLint errors during build
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  // Ignore TypeScript errors during build (optional, use with caution)
   typescript: {
-    ignoreBuildErrors: false, // Keep this false to catch TS errors
+    ignoreBuildErrors: false,
   },
-  // Optimize images
   images: {
     domains: [],
     formats: ["image/webp", "image/avif"],
   },
-  // Optimize for production
   compress: true,
-  // Configure headers for security
   async headers() {
     return [
       {
@@ -44,4 +36,3 @@ const nextConfig: NextConfig = {
 };
 
 export default withNextIntl(nextConfig);
-
