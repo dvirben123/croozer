@@ -26,10 +26,18 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
 
+  // Allow requests from localhost when using tunnels
+  trustedOrigins: [
+    "http://localhost:3000",
+    process.env.BETTER_AUTH_URL || "",
+  ].filter(Boolean),
+
   socialProviders: {
     facebook: {
       clientId: process.env.FACEBOOK_APP_ID || "",
       clientSecret: process.env.FACEBOOK_APP_SECRET || "",
+      // Facebook Login for Business requires configId
+      configId: process.env.FACEBOOK_CONFIGURATION || "",
     },
   },
 

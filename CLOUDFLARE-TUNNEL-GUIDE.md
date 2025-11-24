@@ -10,17 +10,37 @@
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Automated - Recommended)
+
+### One Command Setup:
+
+```bash
+pnpm dev:tunnel
+```
+
+**That's it!** The script will:
+1. ✅ Start Cloudflare Tunnel
+2. ✅ Detect the tunnel URL automatically
+3. ✅ Update `.env.local` with the URL
+4. ✅ Start Next.js dev server
+5. ✅ Show you the tunnel URL and next steps
+
+**Using ngrok instead?**
+```bash
+pnpm dev:tunnel:ngrok
+```
+
+---
+
+## 🔧 Manual Setup (Alternative)
+
+If you prefer manual control:
 
 ### 1. Start Development with Tunnel:
 
 ```bash
-pnpm dev:all
+cloudflared tunnel --url http://localhost:3000
 ```
-
-This starts:
-- **Next.js** on `http://localhost:3000`
-- **Cloudflare Tunnel** exposing it publicly
 
 ### 2. Copy Your Tunnel URL:
 
@@ -35,7 +55,7 @@ Look for output like this in your terminal:
 
 **Copy that URL!** (e.g., `https://random-words-1234.trycloudflare.com`)
 
-### 3. Update `.env` File:
+### 3. Update `.env.local` File:
 
 Replace the placeholder with your actual tunnel URL:
 
@@ -44,9 +64,9 @@ BETTER_AUTH_URL=https://random-words-1234.trycloudflare.com
 NEXT_PUBLIC_BASE_URL=https://random-words-1234.trycloudflare.com
 ```
 
-### 4. Restart Next.js:
+### 4. Start Next.js:
 
-Stop and restart your dev server to pick up the new URL:
+In a new terminal:
 
 ```bash
 # Press Ctrl+C to stop

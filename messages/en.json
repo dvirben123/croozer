@@ -1,0 +1,15 @@
+{
+  "onboarding": {
+    "title": "Set up your business",
+    "subtitle": "Let's set up your business in 7 simple steps",
+    "steps": {
+      "businessDetails": "Business Details",
+      "category": "Category",
+      "menu": "Menu",
+      "whatsapp": "WhatsApp",
+      "payment": "Payments",
+      "messages": "Messages",
+      "complete": "Complete"
+    }
+  }
+}

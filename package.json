@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:tunnel": "cloudflared tunnel --url http://localhost:3000",
-    "dev:all": "concurrently \"pnpm dev\" \"pnpm dev:tunnel\" --names \"NEXT,TUNNEL\" --prefix-colors \"cyan,magenta\"",
+    "dev:tunnel": "node scripts/dev-tunnel.js",
+    "dev:tunnel:ngrok": "TUNNEL_TYPE=ngrok node scripts/dev-tunnel.js",
+    "dev:tunnel:cloudflare": "TUNNEL_TYPE=cloudflare node scripts/dev-tunnel.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
     formats: ["image/webp", "image/avif"],
   },
   compress: true,
+  // Allow development tunnels (ngrok, Cloudflare) for OAuth callbacks
+  allowedDevOrigins: [
+    "*.ngrok-free.app",
+    "*.ngrok.io",
+    "*.trycloudflare.com",
+  ],
   async headers() {
     return [
       {

@@ -14,16 +14,17 @@ export default function FacebookLoginButton() {
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      // Save current URL to redirect back after login (unless it's the login page)
+      // Determine redirect URL after login
       const currentPath = window.location.pathname;
-      if (currentPath !== "/login" && !sessionStorage.getItem("redirectAfterLogin")) {
-        sessionStorage.setItem("redirectAfterLogin", currentPath);
-      }
+      const redirectURL = currentPath === "/login" ? "/dashboard" : currentPath;
+
+      // Save for post-login redirect
+      sessionStorage.setItem("redirectAfterLogin", redirectURL);
 
       // Use Better Auth to sign in with Facebook
       await authClient.signIn.social({
         provider: "facebook",
-        callbackURL: sessionStorage.getItem("redirectAfterLogin") || "/dashboard",
+        callbackURL: redirectURL,
       });
     } catch (error) {
       console.error("Error logging in with Facebook:", error);

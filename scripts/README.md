@@ -1,206 +1,73 @@
-# Croozer Scripts
+# Development Scripts
 
-Organized scripts for WhatsApp Business API management.
+## dev-tunnel.js
 
----
+Automated development script that:
+1. Starts a tunnel (Cloudflare or ngrok)
+2. Detects the tunnel URL
+3. Updates `.env.local` with the tunnel URL
+4. Starts Next.js development server
 
-## 📱 Main Script - Send Messages
+### Usage
 
-### `send-message.ts` ⭐ **USE THIS ONE**
-
-**The main script for sending WhatsApp messages.**
-
+#### Using Cloudflare Tunnel (Default)
 ```bash
-npx tsx scripts/send-message.ts
+pnpm dev:tunnel
+# or
+pnpm dev:tunnel:cloudflare
 ```
 
-**Features:**
-- ✅ Interactive prompts
-- ✅ Send template messages (hello_world)
-- ✅ Send custom text messages
-- ✅ Reads from `.env` automatically
-- ✅ Error handling with helpful messages
-
-**When to use:**
-- Testing message delivery
-- Sending messages to customers
-- Verifying WhatsApp API is working
-
----
-
-## 📁 Folder Structure
-
-```
-scripts/
-├── send-message.ts          ⭐ Main script - Use this!
-├── README.md                📖 This file
-│
-├── setup/                   🔧 Setup & Configuration
-│   ├── register-phone-number.ts
-│   ├── generate-encryption-keys.ts
-│   └── create-test-business.ts
-│
-├── testing/                 🧪 Testing & Verification
-│   ├── test-meta-api.ts
-│   ├── test-whatsapp-service.ts
-│   ├── check-phone-status.ts
-│   ├── check-token-info.ts
-│   └── check-message-status.ts
-│
-└── utils/                   🛠️ Utilities
-    ├── update-env-values.ts
-    └── fix-phone-number-id.ts
-```
-
----
-
-## 🔧 Setup Scripts
-
-### Initial Setup (One-time)
-
-#### 1. Generate Encryption Keys
+#### Using ngrok
 ```bash
-npx tsx scripts/setup/generate-encryption-keys.ts
-```
-Creates secure encryption keys for storing customer tokens.
-
-#### 2. Register Phone Number
-```bash
-npx tsx scripts/setup/register-phone-number.ts
-```
-Registers your WhatsApp Business phone number with the API.
-
-#### 3. Create Test Business
-```bash
-npx tsx scripts/setup/create-test-business.ts
-```
-Creates a test business account in MongoDB for development.
-
----
-
-## 🧪 Testing Scripts
-
-### Verify Your Setup
-
-#### Check Meta API Connection
-```bash
-npx tsx scripts/testing/test-meta-api.ts
-```
-Runs comprehensive tests on your Meta Business API setup.
-
-#### Check Phone Number Status
-```bash
-npx tsx scripts/testing/check-phone-status.ts
-```
-Shows your phone number verification status and details.
-
-#### Check Access Token
-```bash
-npx tsx scripts/testing/check-token-info.ts
-```
-Verifies if your token is permanent and shows expiration info.
-
-#### Test WhatsApp Service
-```bash
-npx tsx scripts/testing/test-whatsapp-service.ts
-```
-Tests the multi-tenant WhatsApp service functionality.
-
----
-
-## 🛠️ Utility Scripts
-
-### Fix Configuration Issues
-
-#### Update Environment Values
-```bash
-npx tsx scripts/utils/update-env-values.ts
-```
-Updates `.env` file with correct WhatsApp credentials.
-
-#### Fix Phone Number ID
-```bash
-npx tsx scripts/utils/fix-phone-number-id.ts
-```
-Corrects the WHATSAPP_PHONE_NUMBER_ID in `.env`.
-
----
-
-## 📋 Quick Reference
-
-### Most Common Tasks
-
-| Task | Command |
-|------|---------|
-| **Send a message** | `npx tsx scripts/send-message.ts` |
-| **Check if setup is working** | `npx tsx scripts/testing/test-meta-api.ts` |
-| **Verify phone number** | `npx tsx scripts/testing/check-phone-status.ts` |
-| **Check token expiration** | `npx tsx scripts/testing/check-token-info.ts` |
-
----
-
-## 🔐 Environment Variables Required
-
-Make sure your `.env` file has these values:
-
-```env
-# Required for all scripts
-META_SYSTEM_USER_ACCESS_TOKEN=your_permanent_token
-WHATSAPP_PHONE_NUMBER_ID=789427540931519
-WHATSAPP_BUSINESS_ACCOUNT_ID=1980175552606363
-
-# Required for encryption
-ENCRYPTION_KEY=your_64_char_hex
-ENCRYPTION_IV=your_32_char_hex
-
-# Required for database
-MONGODB_URI=your_mongodb_connection_string
+pnpm dev:tunnel:ngrok
 ```
 
----
+### What it does
 
-## 💡 Tips
+1. **Starts the tunnel**: Launches Cloudflare Tunnel or ngrok
+2. **Extracts tunnel URL**: Monitors the tunnel output to detect the public URL
+3. **Updates environment**: Automatically updates `.env.local` with:
+   - `BETTER_AUTH_URL=<tunnel-url>`
+   - `NEXT_PUBLIC_BASE_URL=<tunnel-url>`
+4. **Starts Next.js**: Launches the development server with the updated environment
+5. **Shows next steps**: Displays the tunnel URL and instructions for Facebook App setup
 
-### Sending Messages
+### Requirements
 
-1. **Always use template messages first** - They work with any number
-2. **Text messages require 24h window** - User must message you first
-3. **Add test numbers in Meta dashboard** - Required for testing
+- **Cloudflare Tunnel**: `cloudflared` must be installed
+  ```bash
+  brew install cloudflared
+  ```
+
+- **ngrok**: `ngrok` must be installed (optional)
+  ```bash
+  brew install ngrok
+  ```
+
+### Environment Variables
+
+The script updates `.env.local` (creates it if it doesn't exist) with:
+- `BETTER_AUTH_URL`: The tunnel URL for Better Auth callbacks
+- `NEXT_PUBLIC_BASE_URL`: The public base URL for the application
+- `FACEBOOK_VALID_REDIRECT_TO_UPDATE`: The complete redirect URI to add to Facebook App settings
+
+### Notes
+
+- Press `Ctrl+C` to stop both the tunnel and Next.js dev server
+- The tunnel URL changes each time you restart (for free Cloudflare tunnels)
+- Remember to update your Facebook App settings with the new tunnel URL
 
 ### Troubleshooting
 
-- **Error 131026**: Add recipient as test number in Meta dashboard
-- **Error 131047**: Use template messages instead of text
-- **Error 190**: Access token is invalid or expired
-- **Error 100**: Check phone number format (no + or spaces)
+**Tunnel doesn't start:**
+- Make sure `cloudflared` or `ngrok` is installed
+- Check that port 3000 is available
 
-### Meta Dashboard Links
+**Tunnel URL not detected:**
+- The script has a 30-second timeout
+- Check the console output for errors
+- Try running manually: `cloudflared tunnel --url http://localhost:3000`
 
-- [WhatsApp API Setup](https://developers.facebook.com/apps/1284378939762336/whatsapp-business/wa-dev-console/)
-- [Business Settings](https://business.facebook.com/settings/)
-- [App Dashboard](https://developers.facebook.com/apps/1284378939762336/)
-
----
-
-## 🚀 Next Steps
-
-After running scripts successfully:
-
-1. ✅ Test `send-message.ts` with a test number
-2. ✅ Verify message delivery on WhatsApp
-3. ✅ Test your dashboard UI at `http://localhost:3000/dashboard`
-4. ✅ Proceed to Sprint 1: Multi-Tenant WhatsApp Service
-
----
-
-## 📖 Documentation
-
-For detailed setup instructions, see:
-- `META-SETUP-CHECKLIST.md` - Complete setup guide
-- `IMPLEMENTATION-ROADMAP.md` - Development roadmap
-- `QUICK-START.md` - Quick start guide
-
----
-
-**Last Updated**: November 17, 2025
-
+**Next.js doesn't pick up new environment:**
+- The script updates `.env.local` before starting Next.js
+- If you need to change the URL mid-development, restart the script
