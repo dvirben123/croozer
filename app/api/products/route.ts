@@ -1,33 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product';
+import Business from '@/models/Business';
 
-// GET /api/products - List all products for a business
+// GET /api/products - List all products for current user's business
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
+    // Get authenticated session (supports dev mode)
+    const session = await getServerSession();
 
-    const { searchParams } = new URL(request.url);
-    const businessId = searchParams.get('businessId');
-    const category = searchParams.get('category');
-    const available = searchParams.get('available');
-
-    if (!businessId) {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, error: 'Business ID is required' },
-        { status: 400 }
+        { error: 'Unauthorized: No session' },
+        { status: 401 }
       );
     }
 
+    await dbConnect();
+
+    // Get user's business
+    const business = await Business.findOne({ userId: session.user.id });
+    if (!business) {
+      return NextResponse.json(
+        { error: 'No business found for this user' },
+        { status: 404 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category');
+    const available = searchParams.get('available');
+    const search = searchParams.get('search');
+
     // Build query
-    const query: any = { businessId };
-    
+    const query: any = { businessId: business._id };
+
     if (category) {
       query.category = category;
     }
-    
+
     if (available === 'true') {
       query.available = true;
+    }
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { nameHe: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
     }
 
     const products = await Product.find(query)
@@ -37,12 +59,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       count: products.length,
-      data: products,
+      products,
     });
   } catch (error: any) {
     console.error('Error fetching products:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch products' },
+      { error: error.message || 'Failed to fetch products' },
       { status: 500 }
     );
   }
@@ -51,33 +73,59 @@ export async function GET(request: NextRequest) {
 // POST /api/products - Create a new product
 export async function POST(request: NextRequest) {
   try {
+    // Get authenticated session (supports dev mode)
+    const session = await getServerSession();
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized: No session' },
+        { status: 401 }
+      );
+    }
+
     await dbConnect();
 
-    const body = await request.json();
-    const { businessId, ...productData } = body;
-
-    if (!businessId) {
+    // Get user's business
+    const business = await Business.findOne({ userId: session.user.id });
+    if (!business) {
       return NextResponse.json(
-        { success: false, error: 'Business ID is required' },
+        { error: 'No business found for this user' },
+        { status: 404 }
+      );
+    }
+
+    const body = await request.json();
+    const { name, nameHe, description, price, category, ...productData } = body;
+
+    // Validate required fields
+    if (!name || !price || !category) {
+      return NextResponse.json(
+        { error: 'Name, price, and category are required' },
         { status: 400 }
       );
     }
 
     // Create product
     const product = await Product.create({
-      businessId,
+      businessId: business._id,
+      name,
+      nameHe,
+      description,
+      price: Number(price),
+      currency: business.settings.currency || 'ILS',
+      category,
       ...productData,
     });
 
     return NextResponse.json({
       success: true,
-      data: product,
+      product,
       message: 'Product created successfully',
     }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating product:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create product' },
+      { error: error.message || 'Failed to create product' },
       { status: 500 }
     );
   }

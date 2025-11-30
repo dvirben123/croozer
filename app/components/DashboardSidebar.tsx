@@ -1,12 +1,12 @@
 "use client";
 
-import { BarChart3, MessageCircle, User, Settings, LogOut } from "lucide-react";
+import { BarChart3, MessageCircle, User, Settings, LogOut, ShoppingBag, UtensilsCrossed, Workflow } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Separator } from "./ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 
-type TabType = "overview" | "messages" | "profile" | "settings";
+type TabType = "overview" | "orders" | "menu" | "template" | "messages" | "profile" | "settings";
 
 interface DashboardSidebarProps {
   activeTab: TabType;
@@ -29,6 +29,24 @@ export default function DashboardSidebar({
       label: "סקירה כללית",
       icon: BarChart3,
       description: "דשבורד ומדדים עסקיים",
+    },
+    {
+      id: "orders" as TabType,
+      label: "הזמנות",
+      icon: ShoppingBag,
+      description: "ניהול הזמנות",
+    },
+    {
+      id: "menu" as TabType,
+      label: "תפריט",
+      icon: UtensilsCrossed,
+      description: "ניהול תפריט ומוצרים",
+    },
+    {
+      id: "template" as TabType,
+      label: "תבנית שיחה",
+      icon: Workflow,
+      description: "עיצוב תהליך ההזמנה",
     },
     {
       id: "messages" as TabType,

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { useDevSession } from "@/hooks/useDevSession";
 import FacebookLoginButton from "@/components/FacebookLoginButton";
 import DevLoginButton from "@/components/DevLoginButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,18 +13,22 @@ import Link from "next/link";
 export default function LoginPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
+  const devSession = useDevSession();
 
   // Redirect to saved URL or dashboard if already logged in
   useEffect(() => {
-    if (session && !isPending) {
+    const hasSession = session || devSession.user;
+    const isStillLoading = isPending || devSession.isLoading;
+
+    if (hasSession && !isStillLoading) {
       const redirectUrl = sessionStorage.getItem("redirectAfterLogin") || "/dashboard";
       sessionStorage.removeItem("redirectAfterLogin");
       router.push(redirectUrl);
     }
-  }, [session, isPending, router]);
+  }, [session, devSession.user, isPending, devSession.isLoading, router]);
 
-  const isAuthenticated = !!session;
-  const isLoading = isPending;
+  const isAuthenticated = !!session || !!devSession.user;
+  const isLoading = isPending || devSession.isLoading;
 
   // Show loading state while checking authentication
   if (isLoading) {

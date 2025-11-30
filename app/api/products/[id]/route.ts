@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product';
+import Business from '@/models/Business';
 
 // GET /api/products/[id] - Get a single product
 export async function GET(
@@ -8,25 +10,45 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession();
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized: No session' },
+        { status: 401 }
+      );
+    }
+
     await dbConnect();
 
-    const product = await Product.findById(params.id);
+    const business = await Business.findOne({ userId: session.user.id });
+    if (!business) {
+      return NextResponse.json(
+        { error: 'No business found for this user' },
+        { status: 404 }
+      );
+    }
+
+    const product = await Product.findOne({
+      _id: params.id,
+      businessId: business._id,
+    });
 
     if (!product) {
       return NextResponse.json(
-        { success: false, error: 'Product not found' },
+        { error: 'Product not found' },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      data: product,
+      product,
     });
   } catch (error: any) {
     console.error('Error fetching product:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch product' },
+      { error: error.message || 'Failed to fetch product' },
       { status: 500 }
     );
   }
@@ -38,34 +60,50 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession();
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized: No session' },
+        { status: 401 }
+      );
+    }
+
     await dbConnect();
 
+    const business = await Business.findOne({ userId: session.user.id });
+    if (!business) {
+      return NextResponse.json(
+        { error: 'No business found for this user' },
+        { status: 404 }
+      );
+    }
+
     const body = await request.json();
-    const { businessId, ...updateData } = body;
 
     // Find and update product
     const product = await Product.findOneAndUpdate(
-      { _id: params.id, businessId }, // Ensure product belongs to this business
-      updateData,
+      { _id: params.id, businessId: business._id },
+      body,
       { new: true, runValidators: true }
     );
 
     if (!product) {
       return NextResponse.json(
-        { success: false, error: 'Product not found or unauthorized' },
+        { error: 'Product not found' },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      data: product,
+      product,
       message: 'Product updated successfully',
     });
   } catch (error: any) {
     console.error('Error updating product:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to update product' },
+      { error: error.message || 'Failed to update product' },
       { status: 500 }
     );
   }
@@ -77,26 +115,33 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession();
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized: No session' },
+        { status: 401 }
+      );
+    }
+
     await dbConnect();
 
-    const { searchParams } = new URL(request.url);
-    const businessId = searchParams.get('businessId');
-
-    if (!businessId) {
+    const business = await Business.findOne({ userId: session.user.id });
+    if (!business) {
       return NextResponse.json(
-        { success: false, error: 'Business ID is required' },
-        { status: 400 }
+        { error: 'No business found for this user' },
+        { status: 404 }
       );
     }
 
     const product = await Product.findOneAndDelete({
       _id: params.id,
-      businessId, // Ensure product belongs to this business
+      businessId: business._id,
     });
 
     if (!product) {
       return NextResponse.json(
-        { success: false, error: 'Product not found or unauthorized' },
+        { error: 'Product not found' },
         { status: 404 }
       );
     }
@@ -108,7 +153,7 @@ export async function DELETE(
   } catch (error: any) {
     console.error('Error deleting product:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to delete product' },
+      { error: error.message || 'Failed to delete product' },
       { status: 500 }
     );
   }

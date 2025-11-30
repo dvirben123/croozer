@@ -42,9 +42,8 @@ export default function DevLoginButton() {
       const result = await response.json();
 
       if (result.success) {
-        // Redirect to dashboard or onboarding
-        router.push('/dashboard');
-        router.refresh();
+        // Force a hard refresh to reload the page and check session
+        window.location.href = '/dashboard';
       } else {
         setError(result.error || 'Login failed');
       }
@@ -70,8 +69,8 @@ export default function DevLoginButton() {
       const result = await response.json();
 
       if (result.success) {
-        router.push('/dashboard');
-        router.refresh();
+        // Force a hard refresh to reload the page and check session
+        window.location.href = '/dashboard';
       } else {
         setError(result.error || 'Login failed');
       }
@@ -184,6 +183,8 @@ export default function DevLoginButton() {
     </div>
   );
 }
+
+
 
 
 
