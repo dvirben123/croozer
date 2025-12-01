@@ -17,6 +17,7 @@ export interface IBusiness extends Document {
     currency: string;
     timezone: string;
     language: string;
+    deliveryFee?: number;
     businessHours?: {
       [day: string]: { open: string; close: string };
     };
@@ -93,6 +94,11 @@ const BusinessSchema = new Schema<IBusiness>(
         type: String,
         default: 'he',
         enum: ['he', 'en', 'ar'],
+      },
+      deliveryFee: {
+        type: Number,
+        default: 0,
+        min: [0, 'Delivery fee cannot be negative'],
       },
       businessHours: {
         type: Map,

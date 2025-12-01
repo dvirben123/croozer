@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     // CRITICAL: Verify authentication before any operations
-    const session = await getServerSession(request);
+    const session = await getServerSession();
     if (!session?.user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     // Extract WABA and phone number info
     const wabas = phoneNumbersData.whatsapp_business_accounts?.data || [];
-    
+
     if (wabas.length === 0) {
       return NextResponse.json(
         { success: false, error: 'No WhatsApp Business Account found' },
@@ -213,7 +213,7 @@ async function subscribeToWebhooks(wabaId: string, accessToken: string) {
   );
 
   const result = await response.json();
-  
+
   if (!result.success) {
     throw new Error(result.error?.message || 'Failed to subscribe to webhooks');
   }

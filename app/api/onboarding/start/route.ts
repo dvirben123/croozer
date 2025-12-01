@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     // CRITICAL: Get userId from session, not from client request
-    const session = await getServerSession(request);
+    const session = await getServerSession();
     if (!session?.user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
