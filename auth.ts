@@ -26,10 +26,14 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
 
-  // Allow requests from localhost when using tunnels
+  // Allow requests from localhost and production domains
   trustedOrigins: [
     "http://localhost:3000",
+    "http://localhost:3001",
+    "https://croozer.co.il",
+    "https://www.croozer.co.il",
     process.env.BETTER_AUTH_URL || "",
+    process.env.NEXT_PUBLIC_BASE_URL || "",
   ].filter(Boolean),
 
   socialProviders: {
