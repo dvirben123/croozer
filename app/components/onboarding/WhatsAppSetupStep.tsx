@@ -49,10 +49,10 @@ export default function WhatsAppSetupStep() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageCircle className="w-6 h-6" />
-            חיבור וואטסאפ
+            חיבור וואטסאפ עסקי
           </CardTitle>
           <CardDescription>
-            חבר את חשבון הוואטסאפ עסקי שלך כדי להתחיל לקבל הזמנות
+            רשום ואמת את מספר הוואטסאפ העסקי שלך. זה שלב חובה להתחיל לקבל הזמנות מלקוחות.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -70,20 +70,31 @@ export default function WhatsAppSetupStep() {
             </div>
           ) : (
             <div className="space-y-6">
+              <div className="bg-primary/10 border-2 border-primary/20 p-6 rounded-lg space-y-3">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-primary" />
+                  <h3 className="font-bold text-primary">שלב קריטי - רישום וואטסאפ</h3>
+                </div>
+                <p className="text-sm">
+                  במהלך התהליך תירשם ותאמת את מספר הוואטסאפ העסקי שלך במערכת של מטא.
+                  המספר יירשם תחת החשבון שלנו ויהיה מוכן לקבל הזמנות.
+                </p>
+              </div>
+
               <div className="bg-muted p-6 rounded-lg space-y-4">
                 <h3 className="font-semibold">מה תצטרך:</h3>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                    <span className="text-sm">מספר טלפון שאינו רשום בוואטסאפ</span>
+                    <span className="text-sm">מספר טלפון שאינו רשום בוואטסאפ אישי או עסקי</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                    <span className="text-sm">חשבון פייסבוק עסקי (או אישי)</span>
+                    <span className="text-sm">חשבון פייסבוק (עסקי או אישי)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                    <span className="text-sm">גישה למספר הטלפון לאימות</span>
+                    <span className="text-sm">אפשרות לקבל SMS או שיחה קולית לאימות (OTP)</span>
                   </li>
                 </ul>
               </div>
@@ -119,8 +130,8 @@ export default function WhatsAppSetupStep() {
 
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                 <p className="text-sm text-blue-900">
-                  <strong>טיפ:</strong> אם אין לך מספר טלפון זמין, תוכל לדלג על שלב זה ולחבר אותו מאוחר יותר
-                  מהגדרות המערכת.
+                  <strong>חשוב:</strong> המערכת תרשום את המספר שלך תחת חשבון הוואטסאפ העסקי שלנו.
+                  המספר יאומת ויהיה מוכן לשליחה וקבלה של הודעות מיד לאחר האישור.
                 </p>
               </div>
             </div>

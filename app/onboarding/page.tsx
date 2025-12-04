@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import Script from 'next/script';
 import { OnboardingProvider, useOnboarding } from '@/contexts/OnboardingContext';
 import WizardStepper from '@/components/onboarding/WizardStepper';
@@ -15,8 +15,8 @@ import CompletionStep from '@/components/onboarding/CompletionStep';
 const steps = [
   { number: 0, title: 'Business Details', titleHe: 'פרטי העסק' },
   { number: 1, title: 'Category', titleHe: 'קטגוריה' },
-  { number: 2, title: 'Menu', titleHe: 'תפריט' },
-  { number: 3, title: 'WhatsApp', titleHe: 'וואטסאפ' },
+  { number: 2, title: 'WhatsApp', titleHe: 'וואטסאפ' },
+  { number: 3, title: 'Menu', titleHe: 'תפריט' },
   { number: 4, title: 'Payment', titleHe: 'תשלומים' },
   { number: 5, title: 'Messages', titleHe: 'הודעות' },
   { number: 6, title: 'Complete', titleHe: 'סיום' },
@@ -67,9 +67,9 @@ function OnboardingContent() {
       case 1:
         return <CategorySelectionStep />;
       case 2:
-        return <MenuBuilderStep />;
-      case 3:
         return <WhatsAppSetupStep />;
+      case 3:
+        return <MenuBuilderStep />;
       case 4:
         return <PaymentSetupStep />;
       case 5:
