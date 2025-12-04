@@ -99,33 +99,58 @@ export async function POST(request: NextRequest) {
 
     // Get phone numbers associated with the token
     const phoneNumbersResponse = await fetch(
-      `https://graph.facebook.com/v22.0/me?fields=whatsapp_business_accounts{id,name,phone_numbers{id,display_phone_number,verified_name}}&access_token=${accessToken}`
+      `https://graph.facebook.com/v22.0/me?fields=whatsapp_business_accounts{id,name,phone_numbers{id,display_phone_number,verified_name,quality_rating,code_verification_status,account_mode}}&access_token=${accessToken}`
     );
 
     const phoneNumbersData = await phoneNumbersResponse.json();
-    console.log('Phone Numbers Data:', phoneNumbersData);
+    console.log('📞 Phone Numbers Data:', JSON.stringify(phoneNumbersData, null, 2));
 
     // Extract WABA and phone number info
     const wabas = phoneNumbersData.whatsapp_business_accounts?.data || [];
 
     if (wabas.length === 0) {
+      console.error('❌ No WABA found');
       return NextResponse.json(
-        { success: false, error: 'No WhatsApp Business Account found' },
+        { success: false, error: 'No WhatsApp Business Account found. Please complete the embedded signup process.' },
         { status: 400 }
       );
     }
 
     const waba = wabas[0]; // Use first WABA
+    console.log('✅ WABA Found:', { id: waba.id, name: waba.name });
+
     const phoneNumbers = waba.phone_numbers?.data || [];
 
     if (phoneNumbers.length === 0) {
+      console.error('❌ No phone number found');
       return NextResponse.json(
-        { success: false, error: 'No phone number found' },
+        { success: false, error: 'No phone number found. Please register a phone number through the embedded signup flow.' },
         { status: 400 }
       );
     }
 
     const phoneNumber = phoneNumbers[0]; // Use first phone number
+
+    // Validate phone number status
+    console.log('📱 Phone Number Details:', {
+      id: phoneNumber.id,
+      display: phoneNumber.display_phone_number,
+      verified_name: phoneNumber.verified_name,
+      quality_rating: phoneNumber.quality_rating,
+      verification_status: phoneNumber.code_verification_status,
+      account_mode: phoneNumber.account_mode
+    });
+
+    // Check if phone number is properly verified
+    if (phoneNumber.code_verification_status && phoneNumber.code_verification_status !== 'VERIFIED') {
+      console.warn('⚠️ Phone number not fully verified:', phoneNumber.code_verification_status);
+      // Don't fail, but log the warning - user might need to verify later
+    }
+
+    // Check phone number quality
+    if (phoneNumber.quality_rating && phoneNumber.quality_rating === 'RED') {
+      console.warn('⚠️ Phone number has RED quality rating - may have restrictions');
+    }
 
     // Encrypt access token
     const encryptedToken = EncryptionService.encrypt(accessToken);

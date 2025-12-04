@@ -101,6 +101,7 @@ export default function WhatsAppConnectButton({
 
   const exchangeCodeForToken = async (code: string) => {
     try {
+      console.log('🔄 Exchanging code for access token...');
       const response = await fetch('/api/meta/exchange-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -108,17 +109,46 @@ export default function WhatsAppConnectButton({
       });
 
       const result = await response.json();
+      console.log('📥 Exchange result:', result);
 
       if (result.success) {
+        console.log('✅ WhatsApp connected successfully:', result.data);
+
+        // Check phone number status
+        await checkPhoneStatus();
+
         onSuccess?.(result.data);
       } else {
+        console.error('❌ Connection failed:', result.error);
         onError?.(result.error || 'Failed to connect WhatsApp');
       }
     } catch (error: any) {
-      console.error('Token exchange error:', error);
+      console.error('💥 Token exchange error:', error);
       onError?.(error.message || 'Failed to connect WhatsApp');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const checkPhoneStatus = async () => {
+    try {
+      const response = await fetch(`/api/whatsapp/phone-status?businessId=${businessId}`);
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('📱 Phone Status:', result.data);
+
+        if (!result.data.isVerified) {
+          console.warn('⚠️ Phone number not verified yet');
+        }
+
+        if (!result.data.isHealthy) {
+          console.warn('⚠️ Phone number quality rating is low');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check phone status:', error);
+      // Don't fail the whole flow
     }
   };
 

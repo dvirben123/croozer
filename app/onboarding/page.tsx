@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
+import Script from 'next/script';
 import { OnboardingProvider, useOnboarding } from '@/contexts/OnboardingContext';
 import WizardStepper from '@/components/onboarding/WizardStepper';
 import BusinessDetailsStep from '@/components/onboarding/BusinessDetailsStep';
@@ -109,9 +110,34 @@ function OnboardingContent() {
 
 export default function OnboardingPage() {
   return (
-    <OnboardingProvider>
-      <OnboardingContent />
-    </OnboardingProvider>
+    <>
+      {/* Facebook SDK for WhatsApp Embedded Signup */}
+      <Script
+        id="facebook-sdk-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.fbAsyncInit = function() {
+              FB.init({
+                appId: '${process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || '1284378939762336'}',
+                cookie: true,
+                xfbml: true,
+                version: 'v22.0'
+              });
+              console.log('✅ Facebook SDK initialized for WhatsApp Embedded Signup');
+            };
+          `,
+        }}
+      />
+      <Script
+        src="https://connect.facebook.net/en_US/sdk.js"
+        strategy="afterInteractive"
+      />
+
+      <OnboardingProvider>
+        <OnboardingContent />
+      </OnboardingProvider>
+    </>
   );
 }
 
