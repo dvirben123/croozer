@@ -18,11 +18,14 @@ interface WizardStepperProps {
 }
 
 export default function WizardStepper({ steps, currentStep, completedSteps }: WizardStepperProps) {
+  // Ensure completedSteps is always an array
+  const safeCompletedSteps = completedSteps || [];
+
   return (
     <div className="w-full py-6" dir="rtl">
       <div className="flex items-center justify-between">
         {steps.map((step, index) => {
-          const isCompleted = completedSteps.includes(`step_${step.number}`);
+          const isCompleted = safeCompletedSteps.includes(`step_${step.number}`);
           const isCurrent = currentStep === step.number;
           const isUpcoming = step.number > currentStep;
 

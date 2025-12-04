@@ -125,8 +125,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       if (result.data) {
         updateData({
           businessId: result.data._id,
-          currentStep: result.data.onboarding.currentStep,
-          stepsCompleted: result.data.onboarding.stepsCompleted,
+          currentStep: result.data.onboarding?.currentStep ?? 0,
+          stepsCompleted: result.data.onboarding?.stepsCompleted || [],
         });
       }
     } catch (err: any) {
