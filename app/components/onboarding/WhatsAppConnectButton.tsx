@@ -45,14 +45,26 @@ export default function WhatsAppConnectButton({
     const configId = process.env.NEXT_PUBLIC_META_CONFIGURATION_ID;
     const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || '1284378939762336';
 
-    console.log('Config ID:', configId);
-    console.log('App ID:', appId);
+    console.log('📋 Configuration Check:');
+    console.log('  - Config ID:', configId);
+    console.log('  - App ID:', appId);
+    console.log('  - Business ID:', businessId);
+    console.log('  - FB SDK Loaded:', !!window.FB);
 
     if (!configId) {
-      const error = 'WhatsApp configuration not found. Please contact support.';
+      const error = 'Configuration ID not found. Please restart dev server after setting NEXT_PUBLIC_META_CONFIGURATION_ID in .env';
       console.error('❌ META_CONFIGURATION_ID not configured');
+      alert(error);
       onError?.(error);
       setIsLoading(false);
+      return;
+    }
+
+    if (!window.FB) {
+      console.error('❌ Facebook SDK not loaded');
+      alert('Facebook SDK not loaded. Please refresh the page.');
+      setIsLoading(false);
+      onError?.('Facebook SDK not loaded');
       return;
     }
 
