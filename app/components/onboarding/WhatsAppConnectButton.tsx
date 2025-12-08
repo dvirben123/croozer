@@ -71,11 +71,11 @@ export default function WhatsAppConnectButton({
     window.FB.login(
       (response: any) => {
         console.log('📥 FB.login response:', response);
-        
+
         if (response.authResponse) {
           const code = response.authResponse.code;
           console.log('✅ Got auth code:', code);
-          
+
           // Exchange code for access token via our backend
           exchangeCodeForToken(code);
         } else {
@@ -88,6 +88,7 @@ export default function WhatsAppConnectButton({
         config_id: configId,
         response_type: 'code',
         override_default_response_type: true,
+        scope: 'whatsapp_business_management,whatsapp_business_messaging,business_management',
         extras: {
           setup: {
             business: {
