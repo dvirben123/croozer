@@ -38,23 +38,15 @@ export default function WhatsAppConnectButton({
 
   const launchWhatsAppSignup = () => {
     console.log('🚀 Launching WhatsApp Signup...');
-    console.log('SDK Loaded:', sdkLoaded);
-    console.log('window.FB:', !!window.FB);
     console.log('Business ID:', businessId);
-
-    if (!window.FB || !sdkLoaded) {
-      const error = 'Facebook SDK not loaded. Please refresh the page.';
-      console.error('❌', error);
-      onError?.(error);
-      return;
-    }
 
     setIsLoading(true);
 
     const configId = process.env.NEXT_PUBLIC_META_CONFIGURATION_ID;
-    console.log('Config ID:', configId ? `✅ Set: ${configId}` : '❌ Missing');
-    console.log('Config ID type:', typeof configId);
-    console.log('Config ID value:', configId);
+    const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || '1284378939762336';
+
+    console.log('Config ID:', configId);
+    console.log('App ID:', appId);
 
     if (!configId) {
       const error = 'WhatsApp configuration not found. Please contact support.';
@@ -64,45 +56,131 @@ export default function WhatsAppConnectButton({
       return;
     }
 
-    console.log('📞 Calling FB.login with config:', {
-      config_id: configId,
-      businessId: businessId,
-    });
+    // Store session info from postMessage
+    let sessionInfo: { phone_number_id: string; waba_id: string } | null = null;
 
-    // Launch Meta's Embedded Signup dialog
-    window.FB.login(
-      (response: any) => {
-        console.log('📥 FB.login response:', response);
+    // Set up postMessage listener (per Meta documentation)
+    const messageHandler = (event: MessageEvent) => {
+      // Only accept messages from Facebook
+      if (event.origin !== 'https://www.facebook.com' && event.origin !== 'https://web.facebook.com') {
+        return;
+      }
 
-        if (response.authResponse) {
-          const code = response.authResponse.code;
-          console.log('✅ Got auth code:', code);
+      console.log('📩 Received message from popup:', event.data);
 
-          // Exchange code for access token via our backend
-          exchangeCodeForToken(code);
-        } else {
-          console.log('❌ User cancelled login or did not fully authorize.');
-          setIsLoading(false);
-          onError?.('Authorization cancelled');
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+          if (data.event === 'FINISH' && data.data) {
+            const { phone_number_id, waba_id } = data.data;
+            console.log('✅ Session info received:', { phone_number_id, waba_id });
+
+            // Store session info to be used with the OAuth code
+            sessionInfo = { phone_number_id, waba_id };
+          } else if (data.event === 'CANCEL') {
+            const { current_step } = data.data;
+            console.log('❌ User cancelled at step:', current_step);
+            setIsLoading(false);
+            onError?.('Signup cancelled by user');
+          } else if (data.event === 'ERROR') {
+            const { error_message } = data.data;
+            console.error('❌ Error during signup:', error_message);
+            setIsLoading(false);
+            onError?.(error_message || 'Error during signup');
+          }
         }
-      },
-      {
-        config_id: configId,
-        response_type: 'code',
-        override_default_response_type: true,
-        scope: 'whatsapp_business_management,whatsapp_business_messaging,business_management',
-        extras: {
-          setup: {
-            business: {
-              id: businessId,
-            },
-          },
+      } catch (error) {
+        console.log('Non-JSON response:', event.data);
+      }
+    };
+
+    window.addEventListener('message', messageHandler);
+
+    // FB.login callback (per Meta documentation)
+    const fbLoginCallback = (response: any) => {
+      console.log('📥 FB.login response:', response);
+
+      if (response.authResponse) {
+        const code = response.authResponse.code;
+        console.log('✅ Got auth code:', code);
+
+        // Wait a bit for session info to arrive via postMessage
+        setTimeout(() => {
+          if (sessionInfo) {
+            console.log('🔄 Registering WhatsApp with code and session info...');
+            registerWhatsApp(code, sessionInfo.phone_number_id, sessionInfo.waba_id);
+          } else {
+            console.warn('⚠️ No session info received, registering with code only...');
+            // Fallback: try to register with just the code
+            registerWhatsAppWithCode(code);
+          }
+          window.removeEventListener('message', messageHandler);
+        }, 1000);
+      } else {
+        console.error('❌ No auth response from FB.login');
+        setIsLoading(false);
+        onError?.('Facebook login failed');
+        window.removeEventListener('message', messageHandler);
+      }
+    };
+
+    // Launch Facebook login (per Meta documentation)
+    if (!window.FB) {
+      console.error('❌ Facebook SDK not loaded');
+      setIsLoading(false);
+      onError?.('Facebook SDK not loaded');
+      return;
+    }
+
+    window.FB.login(fbLoginCallback, {
+      config_id: configId,
+      response_type: 'code',
+      override_default_response_type: true,
+      extras: {
+        setup: {
+          business: {
+            id: businessId
+          }
         },
-      } as any
-    );
+        sessionInfoVersion: '3',
+        version: 'v3'
+      }
+    });
   };
 
-  const exchangeCodeForToken = async (code: string) => {
+  const registerWhatsApp = async (code: string, phoneNumberId: string, wabaId: string) => {
+    try {
+      console.log('🔄 Registering WhatsApp with backend...');
+      const response = await fetch('/api/meta/register-whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, phoneNumberId, wabaId, businessId }),
+      });
+
+      const result = await response.json();
+      console.log('📥 Registration result:', result);
+
+      if (result.success) {
+        console.log('✅ WhatsApp registered successfully:', result.data);
+
+        // Check phone number status
+        await checkPhoneStatus();
+
+        onSuccess?.(result.data);
+      } else {
+        console.error('❌ Registration failed:', result.error);
+        onError?.(result.error || 'Failed to register WhatsApp');
+      }
+    } catch (error: any) {
+      console.error('💥 Registration error:', error);
+      onError?.(error.message || 'Failed to register WhatsApp');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const registerWhatsAppWithCode = async (code: string) => {
     try {
       console.log('🔄 Exchanging code for access token...');
       const response = await fetch('/api/meta/exchange-token', {

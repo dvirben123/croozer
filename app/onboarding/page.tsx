@@ -120,6 +120,7 @@ export default function OnboardingPage() {
             window.fbAsyncInit = function() {
               FB.init({
                 appId: '${process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || '1284378939762336'}',
+                autoLogAppEvents: true,
                 cookie: true,
                 xfbml: true,
                 version: 'v22.0'

@@ -16,11 +16,17 @@ Before testing the WhatsApp onboarding flow, complete these steps:
   - Select "Business" as app type
   - Add "WhatsApp" product
 
-- [ ] **Generate System User Token**
+- [ ] **Generate System User Token** ⚠️ CRITICAL
   - Go to Business Settings > Users > System Users
-  - Create a new system user
-  - Generate permanent token with full WhatsApp permissions
-  - Copy token (you'll need this for `META_SYSTEM_USER_ACCESS_TOKEN`)
+  - Create a new system user (e.g., "Croozer WhatsApp API")
+  - Assign **Admin** role
+  - Generate permanent token with permissions:
+    - `whatsapp_business_management`
+    - `whatsapp_business_messaging`
+    - `business_management`
+  - Assign your Meta App to the system user with **Full Control**
+  - Copy token (you'll need this for `META_SYSTEM_USER_TOKEN`)
+  - **See**: `META-SYSTEM-USER-TOKEN-SETUP.md` for detailed guide
 
 ### 2. Embedded Signup Configuration
 
@@ -40,17 +46,14 @@ Before testing the WhatsApp onboarding flow, complete these steps:
 - [ ] **Update `.env` file** with the following:
 
 ```env
-# Meta Business Platform (Multi-Tenant Support)
-META_BUSINESS_MANAGER_ID=<your_business_manager_id>
-META_SYSTEM_USER_ACCESS_TOKEN=<your_permanent_system_user_token>
+# ⚠️ CRITICAL: System User Token (Required for Embedded Signup)
+# Get this from: Meta Business Manager > System Users > Generate Token
+# See: META-SYSTEM-USER-TOKEN-SETUP.md for detailed setup guide
+META_SYSTEM_USER_TOKEN=<your_permanent_system_user_token>
 
 # WhatsApp Business App
 META_APP_ID=1284378939762336  # Already set
 META_APP_SECRET=b49d4d80a44a61481f99706961ee6719  # Already set
-
-# WhatsApp Business API Configuration
-WHATSAPP_PHONE_NUMBER_ID=789427540931519  # Already set
-WHATSAPP_BUSINESS_ACCOUNT_ID=1355735762746905  # Already set
 
 # ⚠️ CRITICAL: Embedded Signup Configuration
 # Get this from: Meta Developer Portal > Your App > WhatsApp > Configuration > Embedded Signup
@@ -85,7 +88,8 @@ FACEBOOK_APP_SECRET=b49d4d80a44a61481f99706961ee6719
 ### 5. Verify File Structure
 
 - [ ] **Backend API Routes**
-  - ✅ `app/api/meta/exchange-token/route.ts` - Token exchange
+  - ✅ `app/api/meta/register-whatsapp/route.ts` - Register WhatsApp from embedded signup
+  - ✅ `app/api/meta/exchange-token/route.ts` - Legacy token exchange (deprecated)
   - ✅ `app/api/whatsapp/phone-status/route.ts` - Phone status check
 
 - [ ] **Frontend Components**
@@ -115,20 +119,25 @@ FACEBOOK_APP_SECRET=b49d4d80a44a61481f99706961ee6719
 
 - [ ] Navigate to `/onboarding`
 - [ ] Complete Steps 0-1 (Business Details, Category)
-- [ ] Navigate to Step 3 (WhatsApp Setup)
-- [ ] Check console for: `✅ Facebook SDK initialized`
+- [ ] Navigate to Step 2 (WhatsApp Setup)
+- [ ] Check console for: `✅ Facebook SDK initialized for WhatsApp Embedded Signup`
+- [ ] Verify debug info shows:
+  - SDK: ✅ Loaded
+  - Config: ✅ Set
+  - Business ID: ✅ Set
 - [ ] Click "חבר וואטסאפ עסקי" (Connect WhatsApp Business)
-- [ ] Embedded signup popup appears
+- [ ] Embedded signup popup appears at `business.facebook.com`
 - [ ] Login with Facebook account
 - [ ] Select or create Meta Business Portfolio
 - [ ] Create or select WhatsApp Business Account
-- [ ] Enter phone number
+- [ ] Enter phone number (must not be already registered with WhatsApp)
 - [ ] Verify phone number with OTP (SMS or Voice)
+- [ ] Complete the signup flow
 - [ ] Popup closes automatically
 - [ ] Check console for success messages:
-  - `✅ Got auth code`
-  - `🔄 Exchanging code for access token...`
-  - `✅ WhatsApp connected successfully`
+  - `✅ Signup completed: { phone_number_id: '...', waba_id: '...' }`
+  - `🔄 Registering WhatsApp with backend...`
+  - `✅ WhatsApp registered successfully`
   - `📱 Phone Status: {...}`
 
 ### After Testing
