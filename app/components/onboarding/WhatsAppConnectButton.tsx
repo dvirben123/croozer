@@ -52,8 +52,10 @@ export default function WhatsAppConnectButton({
     setIsLoading(true);
 
     const configId = process.env.NEXT_PUBLIC_META_CONFIGURATION_ID;
-    console.log('Config ID:', configId ? '✅ Set' : '❌ Missing');
-    
+    console.log('Config ID:', configId ? `✅ Set: ${configId}` : '❌ Missing');
+    console.log('Config ID type:', typeof configId);
+    console.log('Config ID value:', configId);
+
     if (!configId) {
       const error = 'WhatsApp configuration not found. Please contact support.';
       console.error('❌ META_CONFIGURATION_ID not configured');
