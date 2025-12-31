@@ -40,3 +40,4 @@ The original onboarding flow had the **Menu Builder** step BEFORE the **WhatsApp
 **Issue**: Step order was wrong (Menu before WhatsApp)
 **Solution**: Swapped steps 2 and 3 (WhatsApp now comes before Menu)
 
+

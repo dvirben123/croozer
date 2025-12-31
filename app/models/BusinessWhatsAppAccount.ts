@@ -2,7 +2,8 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IBusinessWhatsAppAccount extends Document {
   businessId: mongoose.Types.ObjectId;
-  userId: string; // Facebook user ID
+  userId: string; // Croozer user ID (from session)
+  facebookUserId?: string; // Facebook user ID (who performed embedded signup)
 
   // WhatsApp Business Account details
   whatsappBusinessAccountId: string;
@@ -58,6 +59,10 @@ const BusinessWhatsAppAccountSchema = new Schema<IBusinessWhatsAppAccount>(
     userId: {
       type: String,
       required: [true, 'User ID is required'],
+    },
+    facebookUserId: {
+      type: String,
+      required: false,
     },
 
     // WhatsApp Business Account details

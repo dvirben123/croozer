@@ -1,10 +1,13 @@
 // Facebook SDK TypeScript Definitions
 
 export interface FacebookAuthResponse {
-  accessToken: string;
+  accessToken?: string;
+  code?: string; // For embedded signup
   expiresIn: string;
   signedRequest: string;
   userID: string;
+  data_access_expiration_time?: number;
+  graphDomain?: string;
 }
 
 export interface FacebookLoginStatusResponse {
@@ -35,7 +38,21 @@ declare global {
       ) => void;
       login: (
         callback: (response: FacebookLoginStatusResponse) => void,
-        options?: { scope: string }
+        options?: { 
+          scope?: string;
+          config_id?: string; // For embedded signup
+          response_type?: string;
+          override_default_response_type?: boolean;
+          extras?: {
+            setup?: {
+              business?: {
+                id?: string;
+              };
+            };
+            sessionInfoVersion?: string;
+            version?: string;
+          };
+        }
       ) => void;
       logout: (callback: () => void) => void;
       api: (

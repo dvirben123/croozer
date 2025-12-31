@@ -19,7 +19,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { code, phoneNumberId, wabaId, businessId } = await request.json();
+    const { code, phoneNumberId, wabaId, businessId, facebookUserId } = await request.json();
+
+    // Log Meta support information
+    if (facebookUserId) {
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('📋 META SUPPORT INFORMATION (Backend):');
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('1. Business Manager (BM) ID:', process.env.META_BUSINESS_MANAGER_ID);
+      console.log('2. Facebook User ID:', facebookUserId);
+      console.log('3. App ID:', process.env.META_APP_ID);
+      console.log('4. Business ID (Croozer):', businessId);
+      console.log('5. WABA ID:', wabaId);
+      console.log('6. Phone Number ID:', phoneNumberId);
+      console.log('═══════════════════════════════════════════════════════');
+    }
 
     if (!businessId) {
       return NextResponse.json(
@@ -217,10 +231,13 @@ export async function POST(request: NextRequest) {
       whatsappAccount.tokenType = tokenType;
       whatsappAccount.status = 'active';
       whatsappAccount.connectedAt = new Date();
+      if (facebookUserId) {
+        (whatsappAccount as any).facebookUserId = facebookUserId;
+      }
       await whatsappAccount.save();
     } else {
       // Create new
-      whatsappAccount = await BusinessWhatsAppAccount.create({
+      const accountData: any = {
         businessId,
         userId: business.userId,
         whatsappBusinessAccountId: finalWabaId,
@@ -233,7 +250,13 @@ export async function POST(request: NextRequest) {
         webhookSubscribed: false,
         status: 'active',
         connectedAt: new Date(),
-      });
+      };
+      
+      if (facebookUserId) {
+        accountData.facebookUserId = facebookUserId;
+      }
+      
+      whatsappAccount = await BusinessWhatsAppAccount.create(accountData);
     }
 
     // Update business with WhatsApp account reference
