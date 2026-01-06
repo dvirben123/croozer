@@ -2,12 +2,15 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, ArrowLeft, Rocket } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, ArrowRight, Rocket } from 'lucide-react';
 
 export default function CompletionStep() {
+  const t = useTranslations('onboarding.completion');
+  const locale = useLocale();
   const router = useRouter();
   const { data } = useOnboarding();
 
@@ -15,58 +18,64 @@ export default function CompletionStep() {
     router.push('/dashboard');
   };
 
+  const categoryLabel = data.category === 'restaurant' 
+    ? t('categoryRestaurant') 
+    : data.category === 'fast_food' 
+    ? t('categoryFastFood') 
+    : '';
+
   return (
-    <div className="max-w-2xl mx-auto" dir="rtl">
+    <div className="max-w-2xl mx-auto" dir={locale === 'he' ? 'rtl' : 'ltr'}>
       <Card>
         <CardHeader className="text-center">
           <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
             <CheckCircle2 className="w-12 h-12 text-green-600" />
           </div>
-          <CardTitle className="text-2xl">כל הכבוד! ההגדרה הושלמה</CardTitle>
+          <CardTitle className="text-2xl">{t('title')}</CardTitle>
           <CardDescription>
-            העסק שלך מוכן לקבל הזמנות דרך וואטסאפ
+            {t('description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="bg-muted p-6 rounded-lg space-y-4">
-            <h3 className="font-semibold">סיכום ההגדרה:</h3>
+            <h3 className="font-semibold">{t('summaryTitle')}</h3>
             
             <div className="space-y-3">
               <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-sm text-muted-foreground">שם העסק</span>
+                <span className="text-sm text-muted-foreground">{t('businessName')}</span>
                 <span className="font-semibold">{data.name}</span>
               </div>
               
               <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-sm text-muted-foreground">קטגוריה</span>
-                <span className="font-semibold">
-                  {data.category === 'restaurant' ? 'מסעדה' : 'מזון מהיר'}
-                </span>
+                <span className="text-sm text-muted-foreground">{t('category')}</span>
+                <span className="font-semibold">{categoryLabel}</span>
               </div>
               
               <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-sm text-muted-foreground">מוצרים בתפריט</span>
+                <span className="text-sm text-muted-foreground">{t('productsCount')}</span>
                 <span className="font-semibold">{data.productsCount || 0}</span>
               </div>
               
               <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-sm text-muted-foreground">וואטסאפ</span>
+                <span className="text-sm text-muted-foreground">{t('whatsapp')}</span>
                 <span className={data.whatsappConnected ? 'text-green-600 font-semibold' : 'text-muted-foreground'}>
-                  {data.whatsappConnected ? 'מחובר ✓' : 'לא מחובר'}
+                  {data.whatsappConnected ? `${t('connected')} ✓` : t('notConnected')}
                 </span>
               </div>
               
               <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-muted-foreground">אמצעי תשלום</span>
+                <span className="text-sm text-muted-foreground">{t('paymentMethods')}</span>
                 <span className={data.paymentProviders && data.paymentProviders.length > 0 ? 'text-green-600 font-semibold' : 'text-muted-foreground'}>
-                  {data.paymentProviders && data.paymentProviders.length > 0 ? `${data.paymentProviders.length} מחוברים ✓` : 'לא הוגדרו'}
+                  {data.paymentProviders && data.paymentProviders.length > 0 
+                    ? `${data.paymentProviders.length} ${t('connected')} ✓` 
+                    : t('notConfigured')}
                 </span>
               </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-semibold">השלבים הבאים:</h3>
+            <h3 className="font-semibold">{t('nextStepsTitle')}</h3>
             
             <div className="space-y-3">
               {!data.whatsappConnected && (
@@ -75,9 +84,9 @@ export default function CompletionStep() {
                     1
                   </div>
                   <div>
-                    <p className="font-semibold text-sm">חבר חשבון וואטסאפ</p>
+                    <p className="font-semibold text-sm">{t('nextSteps.connectWhatsApp.title')}</p>
                     <p className="text-xs text-muted-foreground">
-                      כדי לקבל הזמנות, תצטרך לחבר חשבון וואטסאפ עסקי
+                      {t('nextSteps.connectWhatsApp.description')}
                     </p>
                   </div>
                 </div>
@@ -89,9 +98,9 @@ export default function CompletionStep() {
                     {!data.whatsappConnected ? '2' : '1'}
                   </div>
                   <div>
-                    <p className="font-semibold text-sm">הוסף מוצרים לתפריט</p>
+                    <p className="font-semibold text-sm">{t('nextSteps.addProducts.title')}</p>
                     <p className="text-xs text-muted-foreground">
-                      הוסף את המוצרים שלך כדי שלקוחות יוכלו להזמין
+                      {t('nextSteps.addProducts.description')}
                     </p>
                   </div>
                 </div>
@@ -102,9 +111,9 @@ export default function CompletionStep() {
                   <Rocket className="w-3 h-3" />
                 </div>
                 <div>
-                  <p className="font-semibold text-sm">התחל לקבל הזמנות!</p>
+                  <p className="font-semibold text-sm">{t('nextSteps.startReceiving.title')}</p>
                   <p className="text-xs text-muted-foreground">
-                    שתף את מספר הוואטסאפ שלך עם לקוחות והתחל לקבל הזמנות
+                    {t('nextSteps.startReceiving.description')}
                   </p>
                 </div>
               </div>
@@ -114,8 +123,12 @@ export default function CompletionStep() {
           {/* Actions */}
           <div className="flex justify-center pt-4">
             <Button size="lg" onClick={handleGoToDashboard}>
-              עבור ללוח הבקרה
-              <ArrowLeft className="w-5 h-5 mr-2" />
+              {t('goToDashboard')}
+              {locale === 'he' ? (
+                <ArrowLeft className="w-5 h-5 mr-2" />
+              ) : (
+                <ArrowRight className="w-5 h-5 ml-2" />
+              )}
             </Button>
           </div>
         </CardContent>

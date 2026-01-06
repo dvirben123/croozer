@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,9 @@ import { MessageCircle, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle } from 
 import WhatsAppConnectButton from './WhatsAppConnectButton';
 
 export default function WhatsAppSetupStep() {
+  const t = useTranslations('onboarding.whatsapp');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
   const { data, updateData, nextStep, previousStep, saveProgress, isLoading } = useOnboarding();
   const [error, setError] = useState<string | null>(null);
 
@@ -43,16 +47,19 @@ export default function WhatsAppSetupStep() {
     }
   };
 
+  const ArrowIcon = locale === 'he' ? ArrowRight : ArrowLeft;
+  const ArrowIconReverse = locale === 'he' ? ArrowLeft : ArrowRight;
+
   return (
-    <div className="max-w-2xl mx-auto" dir="rtl">
+    <div className="max-w-2xl mx-auto" dir={locale === 'he' ? 'rtl' : 'ltr'}>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageCircle className="w-6 h-6" />
-            חיבור וואטסאפ עסקי
+            {t('title')}
           </CardTitle>
           <CardDescription>
-            רשום ואמת את מספר הוואטסאפ העסקי שלך. זה שלב חובה להתחיל לקבל הזמנות מלקוחות.
+            {t('description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -62,9 +69,9 @@ export default function WhatsAppSetupStep() {
                 <CheckCircle2 className="w-8 h-8 text-green-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2">וואטסאפ מחובר בהצלחה!</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('connected.title')}</h3>
                 <p className="text-muted-foreground">
-                  חשבון הוואטסאפ העסקי שלך מחובר ומוכן לשימוש
+                  {t('connected.description')}
                 </p>
               </div>
             </div>
@@ -73,28 +80,27 @@ export default function WhatsAppSetupStep() {
               <div className="bg-primary/10 border-2 border-primary/20 p-6 rounded-lg space-y-3">
                 <div className="flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 text-primary" />
-                  <h3 className="font-bold text-primary">שלב קריטי - רישום וואטסאפ</h3>
+                  <h3 className="font-bold text-primary">{t('criticalStep')}</h3>
                 </div>
                 <p className="text-sm">
-                  במהלך התהליך תירשם ותאמת את מספר הוואטסאפ העסקי שלך במערכת של מטא.
-                  המספר יירשם תחת החשבון שלנו ויהיה מוכן לקבל הזמנות.
+                  {t('criticalDescription')}
                 </p>
               </div>
 
               <div className="bg-muted p-6 rounded-lg space-y-4">
-                <h3 className="font-semibold">מה תצטרך:</h3>
+                <h3 className="font-semibold">{t('requirements.title')}</h3>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                    <span className="text-sm">מספר טלפון שאינו רשום בוואטסאפ אישי או עסקי</span>
+                    <span className="text-sm">{t('requirements.phoneNumber')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                    <span className="text-sm">חשבון פייסבוק (עסקי או אישי)</span>
+                    <span className="text-sm">{t('requirements.facebookAccount')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                    <span className="text-sm">אפשרות לקבל SMS או שיחה קולית לאימות (OTP)</span>
+                    <span className="text-sm">{t('requirements.phoneAccess')}</span>
                   </li>
                 </ul>
               </div>
@@ -103,7 +109,7 @@ export default function WhatsAppSetupStep() {
                 <div className="bg-red-50 border border-red-200 p-4 rounded-lg flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <p className="text-sm text-red-900 font-medium">שגיאה בחיבור</p>
+                    <p className="text-sm text-red-900 font-medium">{t('connectionError')}</p>
                     <p className="text-sm text-red-700 mt-1">{error}</p>
                   </div>
                 </div>
@@ -119,39 +125,51 @@ export default function WhatsAppSetupStep() {
                 ) : (
                   <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
                     <p className="text-sm text-yellow-900">
-                      <strong>שים לב:</strong> חסר מזהה עסק. אנא שמור את הפרטים בשלב הראשון.
+                      <strong>Note:</strong> Missing business ID. Please save the details in the first step.
                     </p>
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground mt-2">
-                  תועבר לעמוד האימות של מטא
+                  {t('redirectNote')}
                 </p>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                 <p className="text-sm text-blue-900">
-                  <strong>חשוב:</strong> המערכת תרשום את המספר שלך תחת חשבון הוואטסאפ העסקי שלנו.
-                  המספר יאומת ויהיה מוכן לשליחה וקבלה של הודעות מיד לאחר האישור.
+                  <strong>{t('important')}:</strong> {t('importantNote')}
                 </p>
               </div>
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex justify-between pt-4 border-t">
+          <div className={`flex justify-between pt-4 border-t ${locale === 'he' ? '' : 'flex-row-reverse'}`}>
             <Button variant="outline" onClick={previousStep} disabled={isLoading}>
-              <ArrowRight className="w-4 h-4 ml-2" />
-              חזור
+              {locale === 'he' ? (
+                <>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {t('back')}
+                </>
+              ) : (
+                <>
+                  {t('back')}
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                </>
+              )}
             </Button>
             <div className="flex gap-2">
               {!data.whatsappConnected && (
                 <Button variant="ghost" onClick={handleSkip} disabled={isLoading}>
-                  דלג לעכשיו
+                  {t('skipForNow')}
                 </Button>
               )}
               <Button onClick={handleNext} disabled={isLoading}>
-                {isLoading ? 'שומר...' : 'המשך'}
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                {isLoading ? t('saving') : t('continue')}
+                {locale === 'he' ? (
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                ) : (
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                )}
               </Button>
             </div>
           </div>

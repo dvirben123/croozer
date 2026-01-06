@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ interface BusinessDetailsForm {
 
 export default function BusinessDetailsStep() {
   const t = useTranslations("onboarding.businessDetails");
+  const locale = useLocale();
   const { data, updateData, nextStep, saveProgress, isLoading } =
     useOnboarding();
 
@@ -70,7 +71,7 @@ export default function BusinessDetailsStep() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto" dir="rtl">
+    <div className="max-w-2xl mx-auto" dir={locale === 'he' ? 'rtl' : 'ltr'}>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

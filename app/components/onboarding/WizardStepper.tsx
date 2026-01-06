@@ -1,13 +1,13 @@
 "use client";
 
 import React from 'react';
+import { useLocale } from 'next-intl';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Step {
   number: number;
   title: string;
-  titleHe: string;
   description?: string;
 }
 
@@ -18,11 +18,12 @@ interface WizardStepperProps {
 }
 
 export default function WizardStepper({ steps, currentStep, completedSteps }: WizardStepperProps) {
+  const locale = useLocale();
   // Ensure completedSteps is always an array
   const safeCompletedSteps = completedSteps || [];
 
   return (
-    <div className="w-full py-6" dir="rtl">
+    <div className="w-full py-6" dir={locale === 'he' ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         {steps.map((step, index) => {
           const isCompleted = safeCompletedSteps.includes(`step_${step.number}`);
@@ -59,7 +60,7 @@ export default function WizardStepper({ steps, currentStep, completedSteps }: Wi
                       isUpcoming && 'text-muted-foreground'
                     )}
                   >
-                    {step.titleHe}
+                    {step.title}
                   </p>
                 </div>
               </div>

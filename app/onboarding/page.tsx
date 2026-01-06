@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Script from 'next/script';
+import { useTranslations, useLocale } from 'next-intl';
 import { OnboardingProvider, useOnboarding } from '@/contexts/OnboardingContext';
 import WizardStepper from '@/components/onboarding/WizardStepper';
 import BusinessDetailsStep from '@/components/onboarding/BusinessDetailsStep';
@@ -12,18 +13,20 @@ import PaymentSetupStep from '@/components/onboarding/PaymentSetupStep';
 import ConversationFlowStep from '@/components/onboarding/ConversationFlowStep';
 import CompletionStep from '@/components/onboarding/CompletionStep';
 
-const steps = [
-  { number: 0, title: 'Business Details', titleHe: 'פרטי העסק' },
-  { number: 1, title: 'Category', titleHe: 'קטגוריה' },
-  { number: 2, title: 'WhatsApp', titleHe: 'וואטסאפ' },
-  { number: 3, title: 'Menu', titleHe: 'תפריט' },
-  { number: 4, title: 'Payment', titleHe: 'תשלומים' },
-  { number: 5, title: 'Messages', titleHe: 'הודעות' },
-  { number: 6, title: 'Complete', titleHe: 'סיום' },
-];
-
 function OnboardingContent() {
   const { data, updateData } = useOnboarding();
+  const t = useTranslations('onboarding');
+  const locale = useLocale();
+  
+  const steps = [
+    { number: 0, title: t('steps.businessDetails') },
+    { number: 1, title: t('steps.category') },
+    { number: 2, title: t('steps.whatsapp') },
+    { number: 3, title: t('steps.menu') },
+    { number: 4, title: t('steps.payment') },
+    { number: 5, title: t('steps.messages') },
+    { number: 6, title: t('steps.complete') },
+  ];
 
   useEffect(() => {
     // Initialize business if not exists
@@ -85,10 +88,10 @@ function OnboardingContent() {
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8" dir="rtl">
-          <h1 className="text-3xl font-bold mb-2">הגדרת העסק שלך</h1>
+        <div className={`text-center mb-8 ${locale === 'he' ? 'dir-rtl' : ''}`} dir={locale === 'he' ? 'rtl' : 'ltr'}>
+          <h1 className="text-3xl font-bold mb-2">{t('title')}</h1>
           <p className="text-muted-foreground">
-            בואו נגדיר את העסק שלך ב-7 שלבים פשוטים
+            {t('subtitle')}
           </p>
         </div>
 

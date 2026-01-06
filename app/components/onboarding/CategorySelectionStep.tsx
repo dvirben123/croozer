@@ -1,34 +1,45 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UtensilsCrossed, Pizza, ArrowRight, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const categories = [
-  {
-    value: 'restaurant' as const,
-    title: 'מסעדה',
-    description: 'מסעדה עם תפריט מלא, ישיבה במקום ושירות מלצרים',
-    icon: UtensilsCrossed,
-    features: ['תפריט מורחב', 'ניהול שולחנות', 'הזמנות מורכבות'],
-  },
-  {
-    value: 'fast_food' as const,
-    title: 'מזון מהיר',
-    description: 'פיצריה, המבורגרים, שווארמה או עסק אחר למזון מהיר',
-    icon: Pizza,
-    features: ['תפריט פשוט', 'הזמנות מהירות', 'משלוחים'],
-  },
-];
-
 export default function CategorySelectionStep() {
+  const t = useTranslations('onboarding.category');
+  const locale = useLocale();
   const { data, updateData, nextStep, previousStep, saveProgress, isLoading } = useOnboarding();
   const [selectedCategory, setSelectedCategory] = useState<'restaurant' | 'fast_food' | undefined>(
     data.category
   );
+
+  const categories = [
+    {
+      value: 'restaurant' as const,
+      title: t('restaurant.title'),
+      description: t('restaurant.description'),
+      icon: UtensilsCrossed,
+      features: [
+        t('restaurant.features.menu'),
+        t('restaurant.features.tables'),
+        t('restaurant.features.orders'),
+      ],
+    },
+    {
+      value: 'fast_food' as const,
+      title: t('fastFood.title'),
+      description: t('fastFood.description'),
+      icon: Pizza,
+      features: [
+        t('fastFood.features.menu'),
+        t('fastFood.features.orders'),
+        t('fastFood.features.delivery'),
+      ],
+    },
+  ];
 
   const handleNext = async () => {
     if (!selectedCategory) return;
@@ -44,12 +55,12 @@ export default function CategorySelectionStep() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto" dir="rtl">
+    <div className="max-w-4xl mx-auto" dir={locale === 'he' ? 'rtl' : 'ltr'}>
       <Card>
         <CardHeader>
-          <CardTitle>בחר את סוג העסק</CardTitle>
+          <CardTitle>{t('title')}</CardTitle>
           <CardDescription>
-            זה יעזור לנו להתאים את המערכת לצרכים הספציפיים שלך
+            {t('description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -120,14 +131,27 @@ export default function CategorySelectionStep() {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-between pt-4">
+          <div className={`flex justify-between pt-4 ${locale === 'he' ? '' : 'flex-row-reverse'}`}>
             <Button variant="outline" onClick={previousStep} disabled={isLoading}>
-              <ArrowRight className="w-4 h-4 ml-2" />
-              חזור
+              {locale === 'he' ? (
+                <>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {t('back')}
+                </>
+              ) : (
+                <>
+                  {t('back')}
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                </>
+              )}
             </Button>
             <Button onClick={handleNext} disabled={!selectedCategory || isLoading}>
-              {isLoading ? 'שומר...' : 'המשך'}
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              {isLoading ? t('saving') : t('continue')}
+              {locale === 'he' ? (
+                <ArrowLeft className="w-4 h-4 mr-2" />
+              ) : (
+                <ArrowRight className="w-4 h-4 ml-2" />
+              )}
             </Button>
           </div>
         </CardContent>

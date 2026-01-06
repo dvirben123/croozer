@@ -10,6 +10,212 @@
       "payment": "Payments",
       "messages": "Messages",
       "complete": "Complete"
+    },
+    "businessDetails": {
+      "title": "Business Details",
+      "description": "Let's start with the basic details of your business",
+      "nameLabel": "Business Name",
+      "namePlaceholder": "e.g., Pizza Plus",
+      "nameRequired": "Business name is required",
+      "phoneLabel": "Phone Number",
+      "phonePlaceholder": "050-1234567",
+      "phoneRequired": "Phone number is required",
+      "phoneInvalid": "Invalid phone number",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "info@mybusiness.com",
+      "emailRequired": "Email address is required",
+      "emailInvalid": "Invalid email address",
+      "addressTitle": "Business Address",
+      "streetLabel": "Street",
+      "streetPlaceholder": "123 Main Street",
+      "cityLabel": "City",
+      "cityPlaceholder": "Tel Aviv",
+      "countryLabel": "Country",
+      "countryPlaceholder": "Israel",
+      "postalCodeLabel": "Postal Code",
+      "postalCodePlaceholder": "1234567",
+      "continue": "Continue",
+      "saving": "Saving..."
+    },
+    "category": {
+      "title": "Select Business Type",
+      "description": "This will help us tailor the system to your specific needs",
+      "restaurant": {
+        "title": "Restaurant",
+        "description": "Restaurant with full menu, dine-in service and waitstaff",
+        "features": {
+          "menu": "Extended menu",
+          "tables": "Table management",
+          "orders": "Complex orders"
+        }
+      },
+      "fastFood": {
+        "title": "Fast Food",
+        "description": "Pizza, burgers, shawarma or other fast food business",
+        "features": {
+          "menu": "Simple menu",
+          "orders": "Quick orders",
+          "delivery": "Delivery"
+        }
+      },
+      "back": "Back",
+      "continue": "Continue",
+      "saving": "Saving..."
+    },
+    "menu": {
+      "title": "Build Your Menu",
+      "description": "Add products to your menu. Customers will be able to order these products via WhatsApp",
+      "empty": {
+        "title": "Your menu is empty",
+        "description": "Start adding products so customers can place orders",
+        "addFirst": "Add First Product"
+      },
+      "productsCount": "{count} products in menu",
+      "addProduct": "Add Product",
+      "loading": "Loading products...",
+      "back": "Back",
+      "continue": "Continue",
+      "skipForNow": "Skip for now"
+    },
+    "whatsapp": {
+      "title": "Connect WhatsApp",
+      "description": "Connect your WhatsApp Business account to start receiving orders",
+      "connected": {
+        "title": "WhatsApp connected successfully!",
+        "description": "Your WhatsApp Business account is connected and ready to use"
+      },
+      "requirements": {
+        "title": "What you'll need:",
+        "phoneNumber": "A phone number not registered with WhatsApp",
+        "facebookAccount": "A Facebook Business (or personal) account",
+        "phoneAccess": "Access to the phone number for verification"
+      },
+      "connectButton": "Connect WhatsApp Business",
+      "connecting": "Connecting...",
+      "redirectNote": "You will be redirected to Meta's verification page",
+      "tip": "Tip: If you don't have an available phone number, you can skip this step and connect it later from the system settings.",
+      "back": "Back",
+      "continue": "Continue",
+      "skipForNow": "Skip for now",
+      "criticalStep": "Critical Step - WhatsApp Registration",
+      "criticalDescription": "During this process, you will register and verify your WhatsApp Business number in Meta's system. The number will be registered under our account and will be ready to receive orders.",
+      "whatYouNeed": "What you'll need:",
+      "phoneNotRegistered": "A phone number not registered with WhatsApp (personal or business)",
+      "facebookAccount": "A Facebook account (business or personal)",
+      "otpAccess": "Ability to receive SMS or voice call for verification (OTP)",
+      "connectionError": "Connection Error",
+      "note": "Note: Missing business ID. Please save the details in the first step.",
+      "redirectMeta": "You will be redirected to Meta's verification page",
+      "important": "Important:",
+      "importantNote": "The system will register your number under our WhatsApp Business account. The number will be verified and ready to send and receive messages immediately after approval.",
+      "saving": "Saving..."
+    },
+    "payment": {
+      "title": "Payment Setup",
+      "description": "Connect payment methods to receive payments from customers",
+      "empty": {
+        "title": "No payment methods configured",
+        "description": "Add at least one payment method to receive payments from customers"
+      },
+      "providers": {
+        "stripe": {
+          "name": "Stripe",
+          "description": "International payments"
+        },
+        "paypal": {
+          "name": "PayPal",
+          "description": "Secure payments"
+        },
+        "tranzila": {
+          "name": "Tranzila",
+          "description": "Israeli payment provider"
+        },
+        "meshulam": {
+          "name": "Meshulam",
+          "description": "Israeli payment provider"
+        }
+      },
+      "connected": "{count} payment methods connected",
+      "addProvider": "Add Payment Method",
+      "addMore": "Add More",
+      "testMode": "Test Mode",
+      "active": "Active",
+      "default": "Default",
+      "loading": "Loading payment methods...",
+      "tip": "Tip: You can add and manage additional payment methods at any time from the system settings.",
+      "back": "Back",
+      "continue": "Continue",
+      "skipForNow": "Skip for now"
+    },
+    "conversation": {
+      "title": "Configure Automated Conversation",
+      "description": "Customize the messages customers will receive on WhatsApp",
+      "welcomeLabel": "Welcome Message",
+      "welcomePlaceholder": "Type the message customers will receive when they contact you for the first time...",
+      "welcomeHelp": "This message will be sent to customers when they first contact you on WhatsApp",
+      "previewTitle": "Preview:",
+      "flowTitle": "Automated Conversation Flow:",
+      "flowSteps": {
+        "1": "Customer sends first message",
+        "2": "System sends welcome message",
+        "3": "Display menu categories",
+        "4": "Customer selects products",
+        "5": "Customer confirms order",
+        "6": "Send payment link",
+        "7": "Confirm order after payment"
+      },
+      "back": "Back",
+      "continue": "Continue",
+      "saving": "Saving..."
+    },
+    "completion": {
+      "title": "Congratulations! Setup Complete",
+      "description": "Your business is ready to receive orders via WhatsApp",
+      "summaryTitle": "Setup Summary:",
+      "businessName": "Business Name",
+      "category": "Category",
+      "productsCount": "Products in Menu",
+      "whatsapp": "WhatsApp",
+      "paymentMethods": "Payment Methods",
+      "connected": "Connected",
+      "notConnected": "Not Connected",
+      "notConfigured": "Not Configured",
+      "categoryRestaurant": "Restaurant",
+      "categoryFastFood": "Fast Food",
+      "nextStepsTitle": "Next Steps:",
+      "nextSteps": {
+        "connectWhatsApp": {
+          "title": "Connect WhatsApp Account",
+          "description": "To receive orders, you'll need to connect a WhatsApp Business account"
+        },
+        "addProducts": {
+          "title": "Add Products to Menu",
+          "description": "Add your products so customers can place orders"
+        },
+        "startReceiving": {
+          "title": "Start Receiving Orders!",
+          "description": "Share your WhatsApp number with customers and start receiving orders"
+        }
+      },
+      "goToDashboard": "Go to Dashboard"
     }
+  },
+  "common": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "save": "Save",
+    "back": "Back",
+    "next": "Next",
+    "continue": "Continue",
+    "skip": "Skip",
+    "done": "Done",
+    "close": "Close"
   }
 }

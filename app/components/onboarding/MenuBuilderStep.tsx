@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, ArrowRight, ArrowLeft, Utensils } from 'lucide-react';
 
 export default function MenuBuilderStep() {
+  const t = useTranslations('onboarding.menu');
+  const locale = useLocale();
   const { data, updateData, nextStep, previousStep, saveProgress, isLoading } = useOnboarding();
   const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -54,21 +57,21 @@ export default function MenuBuilderStep() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto" dir="rtl">
+    <div className="max-w-4xl mx-auto" dir={locale === 'he' ? 'rtl' : 'ltr'}>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Utensils className="w-6 h-6" />
-            בניית התפריט
+            {t('title')}
           </CardTitle>
           <CardDescription>
-            הוסף מוצרים לתפריט שלך. לקוחות יוכלו להזמין מוצרים אלו דרך וואטסאפ
+            {t('description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {loadingProducts ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">טוען מוצרים...</p>
+              <p className="text-muted-foreground">{t('loading')}</p>
             </div>
           ) : products.length === 0 ? (
             <div className="text-center py-12 space-y-4">
@@ -76,13 +79,22 @@ export default function MenuBuilderStep() {
                 <Utensils className="w-8 h-8 text-muted-foreground" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2">התפריט שלך ריק</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('empty.title')}</h3>
                 <p className="text-muted-foreground mb-4">
-                  התחל להוסיף מוצרים כדי שלקוחות יוכלו להזמין
+                  {t('empty.description')}
                 </p>
                 <Button>
-                  <Plus className="w-4 h-4 ml-2" />
-                  הוסף מוצר ראשון
+                  {locale === 'he' ? (
+                    <>
+                      <Plus className="w-4 h-4 ml-2" />
+                      {t('empty.addFirst')}
+                    </>
+                  ) : (
+                    <>
+                      {t('empty.addFirst')}
+                      <Plus className="w-4 h-4 mr-2" />
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -90,11 +102,20 @@ export default function MenuBuilderStep() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  {products.length} מוצרים בתפריט
+                  {t('productsCount', { count: products.length })}
                 </p>
                 <Button variant="outline" size="sm">
-                  <Plus className="w-4 h-4 ml-2" />
-                  הוסף מוצר
+                  {locale === 'he' ? (
+                    <>
+                      <Plus className="w-4 h-4 ml-2" />
+                      {t('addProduct')}
+                    </>
+                  ) : (
+                    <>
+                      {t('addProduct')}
+                      <Plus className="w-4 h-4 mr-2" />
+                    </>
+                  )}
                 </Button>
               </div>
 
@@ -118,18 +139,31 @@ export default function MenuBuilderStep() {
           )}
 
           {/* Actions */}
-          <div className="flex justify-between pt-4 border-t">
+          <div className={`flex justify-between pt-4 border-t ${locale === 'he' ? '' : 'flex-row-reverse'}`}>
             <Button variant="outline" onClick={previousStep} disabled={isLoading}>
-              <ArrowRight className="w-4 h-4 ml-2" />
-              חזור
+              {locale === 'he' ? (
+                <>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {t('back')}
+                </>
+              ) : (
+                <>
+                  {t('back')}
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                </>
+              )}
             </Button>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={handleSkip} disabled={isLoading}>
-                דלג לעכשיו
+                {t('skipForNow')}
               </Button>
               <Button onClick={handleNext} disabled={isLoading}>
-                {isLoading ? 'שומר...' : 'המשך'}
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                {isLoading ? t('saving') : t('continue')}
+                {locale === 'he' ? (
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                ) : (
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                )}
               </Button>
             </div>
           </div>
